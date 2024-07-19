@@ -1,0 +1,44 @@
+.Catalog-block-search {
+    text-align: center;
+    padding: 15px 5px;
+}
+
+
+.Catalog-block-categories {
+    margin: 5px 0;
+    padding: 0px 10px 5px 10px;
+    background: white;
+    position: relative;
+
+
+    ul {
+        padding-top: 10px;
+        overflow: hidden;
+        transition: height 0.3s all linear;
+        list-style: none;
+
+        li {
+            line-height: 33px;
+            border-bottom: 1px solid rgb(214, 214, 214);
+
+            a {
+                color: black;
+                text-decoration: none;
+                font-family: 'Inter', sans-serif;
+                font-size: 13px;
+                padding: 15px;
+            }
+
+        }
+    }
+}
+
+.Catalog-block-result-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 0 7px 100px 7px;
+    height: 100%;
+}

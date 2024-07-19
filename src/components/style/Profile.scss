@@ -1,0 +1,157 @@
+.Module-inner {
+    line-height: 35px;
+
+    #title {
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 23px;
+        padding-bottom: 15px;
+    }
+
+    #InputPassword {
+        margin: 15px 0;
+    }
+
+    #SubmitIn {
+        width: 80px;
+    }
+}
+
+.Module-inner-regist {
+    .mantine-TextInput-root {
+        margin: 10px 0;
+    }
+
+    #SubmitUp {
+        width: 100%;
+        margin: 15px 0;
+    }
+}
+
+.Profile {
+    background: rgb(235, 235, 235);
+
+
+}
+
+.Profile-list {
+    overflow: scroll;
+    padding-bottom: 60px;
+}
+
+.Profile-link {
+    padding: 15px 10px;
+    text-align: end;
+    background: white;
+
+    a {
+        color: black;
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+    }
+}
+
+.Profile-category {
+    margin: 5px 0;
+    padding: 13px 10px 5px 10px;
+    background: white;
+    position: relative;
+
+    input {
+        display: none;
+
+        &:checked~ul {
+            height: 100%;
+        }
+
+        &:checked~label:after {
+            rotate: -90deg;
+        }
+    }
+
+    label {
+        font-family: 'Inter', sans-serif;
+        font-size: 13px;
+        color: #0073f6;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+
+        &::after {
+            position: absolute;
+            content: '>';
+            font-size: 20px;
+            color: rgb(142, 18, 224);
+            font-weight: 400;
+            right: 15px;
+            rotate: 90deg;
+            transition: 0.3s all linear;
+        }
+
+
+    }
+
+    ul {
+        padding-top: 10px;
+        height: 0;
+        overflow: hidden;
+        transition: height 0.3s all linear;
+        list-style: none;
+
+        li {
+            line-height: 33px;
+            border-bottom: 1px solid rgb(214, 214, 214);
+
+            a {
+                color: black;
+                text-decoration: none;
+                font-family: 'Inter', sans-serif;
+                font-size: 13px;
+                padding: 15px;
+            }
+
+        }
+    }
+}
+
+.Profile-block {
+    background: white;
+    padding: 15px;
+    line-height: 40px;
+}
+
+.Profile-block-orders,
+.Profile-block-saved,
+.Profile-block-location,
+.Profile-block-app {
+
+    a,
+    p {
+        display: flex;
+        align-items: center;
+        color: black;
+        font-family: 'Inter', sans-serif;
+        text-decoration: none;
+        font-size: 13px;
+        gap: 10px;
+
+        svg,
+        i {
+            font-size: 20px;
+            width: 24px;
+            display: flex;
+            align-items: center;
+        }
+
+        span,
+        p {
+            margin: 0;
+        }
+    }
+}
+
+.Profile-block-saved,
+.Profile-block-location {
+    justify-content: center;
+}
