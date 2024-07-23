@@ -9,6 +9,7 @@ import { setUpStates } from '../store/Reducers/Reducer';
 import Main from '../components/Main/Main';
 import Catalog from './../components/Catalog/Catalog';
 import Profile from './../components/Profile/Profile';
+import { Loader } from '@mantine/core';
 
 function Home() {
     const dispatch = useDispatch();
@@ -29,27 +30,75 @@ function Home() {
         };
     }, [page]);
 
-    useEffect(() => {
-        const fetchRequest = async () => {
-            try {
-                const itemsResponse = await axios.get('https://globus-nukus.uz/api/products');
-                const catalogResponse = await axios.get('https://globus-nukus.uz/api/categories');
 
-                dispatch(setUpStates({
-                    products: itemsResponse.data.data.items,
-                    categories: catalogResponse.data.data.categories
-                }));
-            } catch (error) {
-                notifications.show({
-                    title: 'Error',
-                    message: error?.response?.data?.message || 'An error occurred',
-                });
-                console.log(error);
+    const [loading, setLoading] = useState(true);
+
+    const fetchAllProducts = async () => {
+        let allProducts = [];
+        let offset = 0;
+        const limit = 20;
+        let hasMoreProducts = true;
+    
+        while (hasMoreProducts) {
+          try {
+            const response = await axios.get(`https://globus-nukus.uz/api/products?limit=${limit}&offset=${offset}`);
+            const catalogResponse = await axios.get('https://globus-nukus.uz/api/categories');
+    
+            const fetchedProducts = response.data.data.items;
+            const fetchedCategories = catalogResponse.data.data.categories;
+    
+            if (!Array.isArray(fetchedProducts) || fetchedProducts.length === 0) {
+              hasMoreProducts = false;
+            } else {
+              allProducts = [...allProducts, ...fetchedProducts];
+              offset += limit;
             }
-        };
+    
+            dispatch(setUpStates({
+              products: allProducts,
+              categories: fetchedCategories,
+            }));
+          } catch (error) {
+            console.error('Error fetching products:', error);
+            hasMoreProducts = false;
+          }
+          setLoading(false);        
+        }
+    
+      };
+    
+      useEffect(() => {
+        fetchAllProducts();
+      }, []);
+    
+      if (loading) {
+        return (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <Loader />
+          </div>
+        );
+      }
+    // useEffect(() => {
+    //     const fetchRequest = async () => {
+    //         try {
+    //             const itemsResponse = await axios.get('https://globus-nukus.uz/api/products');
+    //             const catalogResponse = await axios.get('https://globus-nukus.uz/api/categories');
 
-        fetchRequest();
-    }, [dispatch]);
+    //             dispatch(setUpStates({
+    //                 products: itemsResponse.data.data.items,
+    //                 categories: catalogResponse.data.data.categories
+    //             }));
+    //         } catch (error) {
+    //             notifications.show({
+    //                 title: 'Error',
+    //                 message: error?.response?.data?.message || 'An error occurred',
+    //             });
+    //             console.log(error);
+    //         }
+    //     };
+
+    //     fetchRequest();
+    // }, [dispatch]);
 
     const getActiveClass = (path) => location.pathname === path ? 'active' : '';
 

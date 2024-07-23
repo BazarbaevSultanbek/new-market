@@ -1,7 +1,7 @@
 import { Carousel } from '@mantine/carousel';
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import '../style/Product.scss';
 import { addToCart, toggleLikeProduct } from '../../store/Reducers/Reducer';
 import { Link } from 'react-router-dom';
@@ -15,6 +15,7 @@ import visa from '../cards/visa.svg';
 
 function Product() {
     const location = useLocation();
+    const navigate = useNavigate();
     const product_id = location?.state?.id;
     const products = useSelector(state => state?.shop?.products);
     const likedProducts = useSelector(state => state?.shop?.currentUser?.LikedProducts);
@@ -22,8 +23,6 @@ function Product() {
     const product = products.find(item => item.id === product_id);
 
     const other_products = products.filter(item => item.category === product?.category && item.id !== product?.id)
-
-    console.log(likedProducts)
 
     const handleLikeClick = (productId) => {
         dispatch(toggleLikeProduct(productId));
@@ -44,7 +43,9 @@ function Product() {
                     </div>
                 </div>
                 <div className="Product-back">
-                    <Link to="/"> <i class="fa-solid fa-arrow-left"></i>Back</Link>
+                    <Link to="/">
+                        <i className="fa-solid fa-arrow-left"></i>Back
+                    </Link>
                 </div>
                 <div className="Product-block">
                     <div className="Product-block-img">

@@ -1,6 +1,18 @@
+import { notifications } from '@mantine/notifications';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+
+
+
+
+
+
+
+
+
+
+
 
 
 export const fetchUserProfile = createAsyncThunk('globus-nukus/fetchUserProfile', async (_, { rejectWithValue, dispatch }) => {
@@ -32,11 +44,6 @@ export const fetchUserProfile = createAsyncThunk('globus-nukus/fetchUserProfile'
         return rejectWithValue(error.response.data);
     }
 });
-
-
-
-
-
 export const refreshToken = createAsyncThunk('globus-nukus/refreshToken', async (_, { rejectWithValue }) => {
     const refresh_token = Cookies.get('refresh_token');
     try {
@@ -53,6 +60,18 @@ export const refreshToken = createAsyncThunk('globus-nukus/refreshToken', async 
         return rejectWithValue('Session expired. Please sign in again.');
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
 
 export const shopSlice = createSlice({
     name: 'globus-nukus',
@@ -77,8 +96,18 @@ export const shopSlice = createSlice({
             const productId = action.payload;
             if (state.currentUser.LikedProducts.includes(productId)) {
                 state.currentUser.LikedProducts = state.currentUser.LikedProducts.filter(id => id !== productId);
+                notifications.show({
+                    title: 'Liked Products',
+                    message: 'Product is deleted from Liked😢',
+                    color: 'red',
+                })
             } else {
                 state.currentUser.LikedProducts.push(productId);
+                notifications.show({
+                    title: 'Liked Products',
+                    message: 'Product is liked ❤️',
+                    color: 'red',
+                })
             }
             Cookies.set('LikedProducts', JSON.stringify(state.currentUser.LikedProducts), { expires: 14 });
         },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TextInput, Button, Modal, Group } from '@mantine/core';
 import { useSelector } from 'react-redux';
 import mastercard from '../cards/mastercard.svg';
@@ -125,6 +125,17 @@ function Checkout() {
         }
     };
 
+
+    const [surname, setSurName] = useState()
+    const [firstName, setFirstName] = useState()
+    const [phoneNumber, setPhoneNumber] = useState()
+
+
+    useEffect(() => {
+        setSurName(currentUser?.last_name);
+        setFirstName(currentUser?.first_name);
+        setPhoneNumber(currentUser?.phone)
+    })
     return (
         <div className='Checkout'>
             <div className="container">
@@ -132,9 +143,9 @@ function Checkout() {
                     <div className="Checkout-block-info">
                         <h2>Order taker</h2>
                         <div className="Checkout-block-info-navi">
-                            <TextInput label="Surname" withAsterisk placeholder='Surname...' value={currentUser?.last_name} />
-                            <TextInput label="First Name" withAsterisk placeholder='First Name...' value={currentUser?.first_name} />
-                            <TextInput label="Phone Number" withAsterisk placeholder='Phone Number...' value={currentUser?.phone} />
+                            <TextInput label="Surname" withAsterisk placeholder='Surname...' value={surname} onChange={(e) => setSurName(e.currentTarget.value)} />
+                            <TextInput label="First Name" withAsterisk placeholder='First Name...' value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} />
+                            <TextInput label="Phone Number" withAsterisk placeholder='Phone Number...' value={phoneNumber} onChange={(e) => setPhoneNumber(e.currentTarget.value)} />
                         </div>
                         <div className="Checkout-block-info-payment">
                             <h2>Payment type</h2>
@@ -185,25 +196,26 @@ function Checkout() {
                     <div className="Checkout-block-order">
                         <div className="Checkout-block-order-done">
                             <p>{total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm</p>
-                            <Button onClick={type === "card" ? handleCardPayment : handleCashPayment} color='rgb(21 21 149 / 78%)'>
+                            <Button onClick={type === "card" && phoneNumber.length > 0 ? handleCardPayment : handleCashPayment} color='rgb(21 21 149 / 78%)'>
                                 {type === "card" ? 'Pay by Card' : 'Order'}
                             </Button>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Cash Payment Warning Modal */}
             <Modal
                 opened={modalOpen}
-                onClose={() => setModalOpen(false)}
+                onClose={() => setModalOpen(false)
+                }
                 title="Cash Payment Unavailable"
             >
                 <p>The cash payment method cannot be activated now. Please choose another payment method.</p>
             </Modal>
 
             {/* Card Payment Modal */}
-            <Modal
+            < Modal
                 opened={cardModalOpen}
                 onClose={() => setCardModalOpen(false)}
                 title="Add Card Details"
@@ -225,10 +237,10 @@ function Checkout() {
                 <Group position="right" mt="md">
                     <Button onClick={handleAddCard}>Submit</Button>
                 </Group>
-            </Modal>
+            </Modal >
 
             {/* Verify Card Modal */}
-            <Modal
+            < Modal
                 opened={verifyModalOpen}
                 onClose={() => setVerifyModalOpen(false)}
                 title="Verify Card"
@@ -243,10 +255,10 @@ function Checkout() {
                 <Group position="right" mt="md">
                     <Button onClick={handleVerifyCard}>Verify</Button>
                 </Group>
-            </Modal>
+            </Modal >
 
             {/* Receipt Creation Modal */}
-            <Modal
+            < Modal
                 opened={receiptModalOpen}
                 onClose={() => setReceiptModalOpen(false)}
                 title="Create Receipt"
@@ -261,8 +273,8 @@ function Checkout() {
                 <Group position="right" mt="md">
                     <Button onClick={handleCreateReceipt}>Create Receipt</Button>
                 </Group>
-            </Modal>
-        </div>
+            </Modal >
+        </div >
     )
 }
 

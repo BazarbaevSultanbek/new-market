@@ -1,0 +1,43 @@
+.Main-categories {
+    background: white;
+    width: 1240px;
+    transition: 0.3s all linear;
+    height: 0%;
+    overflow: hidden;
+    position: absolute;
+    top: 120px;
+    z-index: 100;
+    padding: 0px 50px;
+
+
+}
+
+.Main-categories ul {
+    width: 100%;
+    list-style: none;
+    font-family: 'Roboto', sans-serif;
+    font-size: 13px;
+}
+
+.Main-categories li {
+    margin: 5px 0;
+}
+
+#catalogMain {
+    display: none;
+}
+
+#catalogMain:checked~.Main-categories {
+    height: 140%;
+}
+
+
+
+
+
+.categories-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    grid-column-gap: 50px;
+}
