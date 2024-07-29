@@ -46,7 +46,7 @@ function Main() {
 
     /// UI hooks
     const { Search } = Input;
-    const onSearch = (value, _e, info) => console.log(info?.source, value);
+    const [search_Value, setSearchValue] = useState()
     const autoplay = useRef(Autoplay({ delay: 2000 }));
     /// UI hooks are finished
 
@@ -215,82 +215,160 @@ function Main() {
 
 
 
-
     const CatalogPage = () => {
-        const category_Products = products.filter((item) => item?.category === catalog?.category ? item : '')
+        const category_Products = products.filter((item) => item?.category === catalog?.category);
 
-
-        console.log(category_Products)
-        if (catalog.status && category_Products?.length > 0) {
+        if (catalog.status && category_Products.length > 0) {
             return (
                 <div className='Category-page'>
                     <div className="Category-block">
                         <div className="Category-block-menu">
-                            {
-                                categories?.map((item, index) => (
-                                    <li key={index} onClick={() => setCatalog({
-                                        status: true,
-                                        category: item.id
-                                    })}>{item.name}</li>
-                                ))
-                            }
+                            {categories.map((item, index) => (
+                                <li key={index} onClick={() => setCatalog({
+                                    status: true,
+                                    category: item.id
+                                })}>{item.name}</li>
+                            ))}
                         </div>
-
                         <div className="Category-block-products">
-                            {
-                                category_Products?.map((item) => (
-                                    <div className='Product-block-item' key={item.id}>
-                                        <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item?.id } })}>
-                                            <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
-                                            <button onClick={() => handleLikeClick(item.id)}>
-                                                <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
-                                            </button>
-
-                                            <span
-                                                style={{ display: item.is_new || item.discounts ? 'block' : 'none' }}
-                                                id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
-                                                {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
-                                            </span>
-                                        </div>
-
-
-                                        <div className="Product-block-item-info">
-                                            <div className="Product-item-info-name">
-                                                <span>{item.name}</span>
-                                            </div>
-                                            <div className="Product-item-info-disc" >
-                                                <div>
-                                                    <p>{formatPrice(item.price)} so'm</p>
-                                                    <span>{item?.discounts?.discount_rate} 12 %</span>
-                                                </div>
-                                            </div>
-                                            <div className="Product-item-info-flex">
-
-                                                <div className='Product-item-info-disprice'>
-                                                    <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
-                                                </div>
-                                                <button onClick={() => {
-                                                    handleAddToCart(item),
-                                                        notifications.show({
-                                                            title: 'Adding Product',
-                                                            message: 'Product is added 🛒',
-                                                            color: 'green',
-                                                        })
-                                                }}><i className="fa-solid fa-cart-arrow-down"></i></button>
-                                            </div>
-                                        </div>
-
+                            {category_Products.map((item) => (
+                                <div className='Product-block-item' key={item.id}>
+                                    <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item.id } })}>
+                                        <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
+                                        <button onClick={() => handleLikeClick(item.id)}>
+                                            <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
+                                        </button>
+                                        <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
+                                            {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
+                                        </span>
                                     </div>
-                                ))
-                            }
+                                    <div className="Product-block-item-info">
+                                        <div className="Product-item-info-name">
+                                            <span>{item.name}</span>
+                                        </div>
+                                        <div className="Product-item-info-disc">
+                                            <div>
+                                                <p>{formatPrice(item.price)} so'm</p>
+                                                <span>{item?.discounts?.discount_rate} 12 %</span>
+                                            </div>
+                                        </div>
+                                        <div className="Product-item-info-flex">
+                                            <div className='Product-item-info-disprice'>
+                                                <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
+                                            </div>
+                                            <button onClick={() => {
+                                                handleAddToCart(item);
+                                                notifications.show({
+                                                    title: 'Adding Product',
+                                                    message: 'Product is added 🛒',
+                                                    color: 'green',
+                                                });
+                                            }}><i className="fa-solid fa-cart-arrow-down"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
-            )
+            );
+        } else if (search_Value?.length > 0) {
+            const searchedProducts = products.filter((item) => item.name.toLowerCase().startsWith(search_Value.toLowerCase()));
+
+            if (searchedProducts.length > 0) {
+                return (
+                    <div className="Main-block">
+                        {searchedProducts.map((item) => (
+                            <div className='Product-block-item' key={item.id}>
+                                <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item.id } })}>
+                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
+                                    <button onClick={() => handleLikeClick(item.id)}>
+                                        <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
+                                    </button>
+                                    <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
+                                        {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
+                                    </span>
+                                </div>
+                                <div className="Product-block-item-info">
+                                    <div className="Product-item-info-name">
+                                        <span>{item.name}</span>
+                                    </div>
+                                    <div className="Product-item-info-disc">
+                                        <div>
+                                            <p>{formatPrice(item.price)} so'm</p>
+                                            <span>{item?.discounts?.discount_rate} 12 %</span>
+                                        </div>
+                                    </div>
+                                    <div className="Product-item-info-flex">
+                                        <div className='Product-item-info-disprice'>
+                                            <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
+                                        </div>
+                                        <button onClick={() => {
+                                            handleAddToCart(item);
+                                            notifications.show({
+                                                title: 'Adding Product',
+                                                message: 'Product is added 🛒',
+                                                color: 'green',
+                                            });
+                                        }}><i className="fa-solid fa-cart-arrow-down"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+            } else {
+                const filteredCategories = categories.filter((item) => item.name.toLowerCase().startsWith(search_Value.toLowerCase()));
+                if (filteredCategories.length > 0) {
+                    const categoryProducts = products.filter(product => filteredCategories.some(category => category.id === product.categoryId));
+                    return (
+                        <div className="Main-block">
+                            {categoryProducts.map((item) => (
+                                <div className='Product-block-item' key={item.id}>
+                                    <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item.id } })}>
+                                        <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
+                                        <button onClick={() => handleLikeClick(item.id)}>
+                                            <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
+                                        </button>
+                                        <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
+                                            {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
+                                        </span>
+                                    </div>
+                                    <div className="Product-block-item-info">
+                                        <div className="Product-item-info-name">
+                                            <span>{item.name}</span>
+                                        </div>
+                                        <div className="Product-item-info-disc">
+                                            <div>
+                                                <p>{formatPrice(item.price)} so'm</p>
+                                                <span>{item?.discounts?.discount_rate} 12 %</span>
+                                            </div>
+                                        </div>
+                                        <div className="Product-item-info-flex">
+                                            <div className='Product-item-info-disprice'>
+                                                <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
+                                            </div>
+                                            <button onClick={() => {
+                                                handleAddToCart(item);
+                                                notifications.show({
+                                                    title: 'Adding Product',
+                                                    message: 'Product is added 🛒',
+                                                    color: 'green',
+                                                });
+                                            }}><i className="fa-solid fa-cart-arrow-down"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                } else {
+                    return <div style={{ display: 'flex', justifyContent: 'center' }}>No results found😢</div>;
+                }
+            }
         } else {
             return (
                 <div className='Main-page'>
-
                     <div className="Main-ad">
                         <Carousel
                             classNames={classes}
@@ -333,76 +411,56 @@ function Main() {
                             }
                         </Carousel>
                     </div>
-
-
-
                     <div className="Main-block">
-                        {
-                            currentProducts.map((item) => (
-                                <div className='Product-block-item' key={item.id}>
-                                    <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item?.id } })}>
-                                        <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
-                                        <button onClick={() => handleLikeClick(item.id)}>
-                                            <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
-                                        </button>
-
-                                        <span
-                                            style={{ display: item.is_new || item.discounts ? 'block' : 'none' }}
-                                            id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
-                                            {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
-                                        </span>
-                                    </div>
-
-
-                                    <div className="Product-block-item-info">
-                                        <div className="Product-item-info-name">
-                                            <span>{item.name}</span>
-                                        </div>
-                                        <div className="Product-item-info-disc" >
-                                            <div>
-                                                <p>{formatPrice(item.price)} so'm</p>
-                                                <span>{item?.discounts?.discount_rate} 12 %</span>
-                                            </div>
-                                        </div>
-                                        <div className="Product-item-info-flex">
-
-                                            <div className='Product-item-info-disprice'>
-                                                <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
-                                            </div>
-                                            <button onClick={() => {
-                                                handleAddToCart(item),
-                                                    notifications.show({
-                                                        title: 'Adding Product',
-                                                        message: 'Product is added 🛒',
-                                                        color: 'green',
-                                                    })
-                                            }}><i className="fa-solid fa-cart-arrow-down"></i></button>
-                                        </div>
-                                    </div>
-
+                        {currentProducts.map((item) => (
+                            <div className='Product-block-item' key={item.id}>
+                                <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item.id } })}>
+                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
+                                    <button onClick={() => handleLikeClick(item.id)}>
+                                        <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
+                                    </button>
+                                    <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
+                                        {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
+                                    </span>
                                 </div>
-                            ))
-                        }
+                                <div className="Product-block-item-info">
+                                    <div className="Product-item-info-name">
+                                        <span>{item.name}</span>
+                                    </div>
+                                    <div className="Product-item-info-disc">
+                                        <div>
+                                            <p>{formatPrice(item.price)} so'm</p>
+                                            <span>{item?.discounts?.discount_rate} 12 %</span>
+                                        </div>
+                                    </div>
+                                    <div className="Product-item-info-flex">
+                                        <div className='Product-item-info-disprice'>
+                                            <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
+                                        </div>
+                                        <button onClick={() => {
+                                            handleAddToCart(item);
+                                            notifications.show({
+                                                title: 'Adding Product',
+                                                message: 'Product is added 🛒',
+                                                color: 'green',
+                                            });
+                                        }}><i className="fa-solid fa-cart-arrow-down"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-
-
-
-
-
                     <div className="Pagination">
                         <Pagination
-                            current={currentPage}
-                            onChange={paginate}
                             total={Math.ceil(products.length / productsPerPage)}
-                            defaultPageSize={productsPerPage}
+                            page={currentPage}
+                            onChange={paginate}
                         />
                     </div>
-
                 </div>
-            )
+            );
         }
-    }
-
+    };
     return (
         <div className='Main'>
             <div className="Main-top">
@@ -506,7 +564,7 @@ function Main() {
                             </div>
 
                             <div className="Main-header-search">
-                                <Search placeholder="Search products..." onSearch={onSearch} style={{ width: '90%' }} />
+                                <Search placeholder="Search products..." onChange={(e) => setSearchValue(e.currentTarget.value)} style={{ width: '90%' }} />
                             </div>
 
                         </div>
