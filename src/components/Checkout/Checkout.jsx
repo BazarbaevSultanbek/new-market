@@ -8,16 +8,15 @@ import visa from '../cards/visa.svg';
 import '../style/Checkout.scss';
 import { useLocation } from 'react-router';
 import axios from 'axios';
-
+import MapSelector from './MapSelector';
 function Checkout() {
     const currentUser = useSelector(state => state?.shop?.currentUser?.user);
     const cart = useSelector(state => state?.shop?.currentUser?.cart);
     const location = useLocation();
     const total = location?.state?.total - (currentUser?.cashback_balance || 0);
     const [type, setType] = useState('');
-
+    const [place, setPlace] = useState()
     const [token, setToken] = useState();
-    const [modalOpen, setModalOpen] = useState(false);
     const [cardModalOpen, setCardModalOpen] = useState(false);
     const [cardNumber, setCardNumber] = useState('');
     const [cardExpire, setCardExpire] = useState('');
@@ -25,9 +24,24 @@ function Checkout() {
     const [verifyCode, setVerifyCode] = useState('');
     const [receiptModalOpen, setReceiptModalOpen] = useState(false);
     const [orderId, setOrderId] = useState('');
+    const [selectedLocation, setSelectedLocation] = useState(null);
+    const handleCashPayment = async () => {
+        try {
+            const response = await axios.post('https://globus-nukus.uz/api/receipts/receipts_create', {
+                amount: total,
+                order_id: orderId,
+            });
 
-    const handleCashPayment = () => {
-        setModalOpen(true);
+            if (response.data.success) {
+                const invoiceId = response.data.data.receipt._id;
+
+                alert('Your order is confirmed successfully!');
+                setReceiptModalOpen(false);
+            }
+        } catch (error) {
+            console.error('Error creating receipt:', error);
+            alert('An error occurred while creating the receipt. Please try again later.');
+        }
     };
 
     const handleCardPayment = () => {
@@ -75,7 +89,7 @@ function Checkout() {
         } catch (error) {
             console.error('Error adding card:', error);
         }
-    }
+    };
 
     const handleVerifyCard = async () => {
         try {
@@ -125,17 +139,41 @@ function Checkout() {
         }
     };
 
-
-    const [surname, setSurName] = useState()
-    const [firstName, setFirstName] = useState()
-    const [phoneNumber, setPhoneNumber] = useState()
-
+    const [surname, setSurName] = useState();
+    const [firstName, setFirstName] = useState();
+    const [phoneNumber, setPhoneNumber] = useState();
 
     useEffect(() => {
         setSurName(currentUser?.last_name);
         setFirstName(currentUser?.first_name);
-        setPhoneNumber(currentUser?.phone)
-    })
+        setPhoneNumber(currentUser?.phone);
+    }, [currentUser]);
+
+
+
+    const [min_price, setMin_price] = useState()
+    const [distance, setDistance] = useState()
+    const [price_km, setPrice_km] = useState()
+
+
+
+    useEffect(() => {
+        const fetchDelivery = async () => {
+            const response = await axios.get('https://globus-nukus.uz/api/delivery')
+
+            try {
+                setMin_price(response?.data?.data?.delivery?.min_amount)
+                setDistance(response?.data?.data?.delivey?.free_distance)
+                setPrice_km(response?.data?.data?.delivery?.price_per_km)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchDelivery()
+    }, [])
+
+
     return (
         <div className='Checkout'>
             <div className="container">
@@ -147,26 +185,43 @@ function Checkout() {
                             <TextInput label="First Name" withAsterisk placeholder='First Name...' value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} />
                             <TextInput label="Phone Number" withAsterisk placeholder='Phone Number...' value={phoneNumber} onChange={(e) => setPhoneNumber(e.currentTarget.value)} />
                         </div>
-                        <div className="Checkout-block-info-payment">
-                            <h2>Payment type</h2>
-                            <div className='Checkout-block-info-type'>
-                                <div className="Checkout-info-payment-cash">
-                                    <input type="radio" name='payment' checked={type === 'cash'} value='cash' onChange={() => setType('cash')} />
-                                    <div>
-                                        <h3>Cash method  <i className="fa-solid fa-money-bill-1-wave"></i></h3>
-                                        <p>Pay when you receive your order</p>
-                                    </div>
+                    </div>
+                    <div className="Checkout-block-place">
+                        <h3>Method of obtaining</h3>
+                        <div className="Checkout-block-place-type">
+                            <div className='type-pick-up'>
+                                <input type="radio" id='pickUp' name='place' onClick={() => setPlace('pick-up')} />
+                                <h4>Pick-up point of Globus Nukus №1</h4>
+                            </div>
+                            <div className="type-delivery">
+                                <input type="radio" id='delivery' name='place' onClick={() => setPlace('delivery')} disabled={total < 200000} />
+                                <div> <h4>Delivery method</h4>
+                                    <p>Minimum sum must be {min_price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="Checkout-map">
+                        {place === 'delivery' && <MapSelector setSelectedLocation={setSelectedLocation} />}
+                    </div>
+                    <div className="Checkout-block-info-payment">
+                        <h2>Payment type</h2>
+                        <div className='Checkout-block-info-type'>
+                            <div className="Checkout-info-payment-cash">
+                                <input type="radio" name='payment' checked={type === 'cash'} value='cash' onChange={() => setType('cash')} />
+                                <div>
+                                    <h3>Cash method  <i className="fa-solid fa-money-bill-1-wave"></i></h3>
+                                    <p>Pay when you receive your order</p>
                                 </div>
-                                <div className="Checkout-info-payment-cards">
-                                    <input type="radio" name='payment' checked={type === 'card'} value='card' onChange={() => setType('card')} />
-                                    <div>
-                                        <h3>By card online <i className="fa-regular fa-credit-card"></i></h3>
-                                        <p>UZCARD, HUMO, Visa, Mastercard</p>
-                                        <img src={mastercard} alt="mastercard" />
-                                        <img src={uzcard} alt="uzcard" />
-                                        <img src={humo} alt="humo" />
-                                        <img src={visa} alt="visa" />
-                                    </div>
+                            </div>
+                            <div className="Checkout-info-payment-cards">
+                                <input type="radio" name='payment' checked={type === 'card'} value='card' onChange={() => setType('card')} />
+                                <div>
+                                    <h3>By card online <i className="fa-regular fa-credit-card"></i></h3>
+                                    <p>UZCARD, HUMO, Visa, Mastercard</p>
+                                    <img src={mastercard} alt="mastercard" />
+                                    <img src={uzcard} alt="uzcard" />
+                                    <img src={humo} alt="humo" />
+                                    <img src={visa} alt="visa" />
                                 </div>
                             </div>
                         </div>
@@ -196,109 +251,33 @@ function Checkout() {
                     <div className="Checkout-block-order">
                         <div className="Checkout-block-order-done">
                             <p>{total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm</p>
-                            <Button onClick={type === "card" && phoneNumber.length > 0 ? handleCardPayment : handleCashPayment} color='rgb(21 21 149 / 78%)'>
+                            <Button onClick={type === "card" && firstName.length > 0 && phoneNumber.length > 0 && place.length > 0 ? handleCardPayment : handleCashPayment} color='#7f4dff'>
                                 {type === "card" ? 'Pay by Card' : 'Order'}
                             </Button>
                         </div>
                     </div>
                 </div>
             </div >
-
-            {/* Cash Payment Warning Modal */}
-            <Modal
-                opened={modalOpen}
-                onClose={() => setModalOpen(false)
-                }
-                title="Cash Payment Unavailable"
-            >
-                <p>The cash payment method cannot be activated now. Please choose another payment method.</p>
+            <Modal opened={cardModalOpen} onClose={() => setCardModalOpen(false)} title="Add Card Information">
+                <Group direction="column" grow>
+                    <TextInput label="Card Number" placeholder='Card Number...' value={cardNumber} onChange={handleChangeCardNumber} />
+                    <TextInput label="Expire Date" placeholder='MM/YY' value={cardExpire} onChange={handleChangeExpire} />
+                    <Button onClick={handleAddCard}>Add Card</Button>
+                </Group>
             </Modal>
-
-            {/* Card Payment Modal */}
-            < Modal
-                opened={cardModalOpen}
-                onClose={() => setCardModalOpen(false)}
-                title="Add Card Details"
-            >
-                <TextInput
-                    label="Card Number"
-                    withAsterisk
-                    placeholder="Enter card number"
-                    value={cardNumber}
-                    onChange={handleChangeCardNumber}
-                />
-                <TextInput
-                    label="Expiry Date"
-                    withAsterisk
-                    placeholder="MM/YY"
-                    value={cardExpire}
-                    onChange={handleChangeExpire}
-                />
-                <Group position="right" mt="md">
-                    <Button onClick={handleAddCard}>Submit</Button>
+            <Modal opened={verifyModalOpen} onClose={() => setVerifyModalOpen(false)} title="Verify Card">
+                <Group direction="column" grow>
+                    <TextInput label="Verification Code" placeholder='Verification Code...' value={verifyCode} onChange={(e) => setVerifyCode(e.currentTarget.value)} />
+                    <Button onClick={handleVerifyCard}>Verify Card</Button>
                 </Group>
-            </Modal >
-
-            {/* Verify Card Modal */}
-            < Modal
-                opened={verifyModalOpen}
-                onClose={() => setVerifyModalOpen(false)}
-                title="Verify Card"
-            >
-                <TextInput
-                    label="Verification Code"
-                    withAsterisk
-                    placeholder="Enter verification code"
-                    value={verifyCode}
-                    onChange={(event) => setVerifyCode(event.currentTarget.value)}
-                />
-                <Group position="right" mt="md">
-                    <Button onClick={handleVerifyCard}>Verify</Button>
+            </Modal>
+            <Modal opened={receiptModalOpen} onClose={() => setReceiptModalOpen(false)} title="Payment Confirmation">
+                <Group direction="column" grow>
+                    <Button onClick={handleCreateReceipt}>Pay and Confirm Order</Button>
                 </Group>
-            </Modal >
-
-            {/* Receipt Creation Modal */}
-            < Modal
-                opened={receiptModalOpen}
-                onClose={() => setReceiptModalOpen(false)}
-                title="Create Receipt"
-            >
-                <TextInput
-                    label="Order ID"
-                    withAsterisk
-                    placeholder="Enter order ID"
-                    value={orderId}
-                    onChange={(event) => setOrderId(event.currentTarget.value)}
-                />
-                <Group position="right" mt="md">
-                    <Button onClick={handleCreateReceipt}>Create Receipt</Button>
-                </Group>
-            </Modal >
+            </Modal>
         </div >
-    )
+    );
 }
 
 export default Checkout;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
