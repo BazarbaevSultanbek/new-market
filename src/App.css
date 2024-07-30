@@ -5,15 +5,16 @@
     height: 0%;
     overflow: hidden;
     position: absolute;
-    top: 120px;
+    padding-top: 10px;
+    top: 110px;
     z-index: 100;
-    padding: 0px 50px;
+
 
 
 }
 
+
 .Main-categories ul {
-    width: 100%;
     list-style: none;
     font-family: 'Roboto', sans-serif;
     font-size: 13px;
@@ -21,6 +22,7 @@
 
 .Main-categories li {
     margin: 5px 0;
+    cursor: pointer;
 }
 
 #catalogMain {
@@ -36,6 +38,8 @@
 
 
 .categories-grid {
+    width: 1140px !important;
+    margin: auto;
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     grid-template-rows: repeat(5, 1fr);

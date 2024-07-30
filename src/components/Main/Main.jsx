@@ -31,9 +31,6 @@ function Main() {
     const cart = useSelector(state => state?.shop?.currentUser?.cart)
     const likedProducts = useSelector(state => state.shop.currentUser.LikedProducts);
     const filteredProduct = products.filter(item => item.discounts || item.is_new);
-
-
-
     //// catalog navi hooks
     const categories = useSelector(state => state?.shop?.categories)
     const [catalog_status, setCatalogStatus] = useState(false)
@@ -45,8 +42,7 @@ function Main() {
 
 
     /// UI hooks
-    const { Search } = Input;
-    const [search_Value, setSearchValue] = useState()
+
     const autoplay = useRef(Autoplay({ delay: 2000 }));
     /// UI hooks are finished
 
@@ -63,58 +59,13 @@ function Main() {
     /// location among pages are finished
 
 
-
     //// pagination
     const [currentPage, setCurrentPage] = useState(1);
-    const [productsPerPage, setPerPage] = useState(20);
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth > 1240) {
-                setPerPage(12);
-            } else {
-                setPerPage(10);
-            }
-        }
-
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, []);
-    const indexOfLast = currentPage * productsPerPage;
-    const indexOfFirst = indexOfLast - productsPerPage;
-    const currentProducts = products.slice(indexOfFirst, indexOfLast);
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
+    let productsPerPage = 18;
+    const currentProducts = products.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
+    const paginate = (page) => setCurrentPage(page);
     ///// pagination is finished
 
-
-    const items = [
-        {
-            name: 'Calculator',
-            description: 'Lorem ipsum dolor sit, amet consectetur adipisicing elit. Blanditiis eius itaque quibusdam, ullam labore modi deleniti dolor vero iusto. Ab at illo quidem laboriosam natus maiores aliquam vitae esse quisquam.',
-            id: 213462,
-            is_new: false,
-            discounts: {
-                discount_rate: 10,
-                is_active: true,
-            },
-            price: 59900,
-            discount_price: 25600,
-            image: calculator
-        },
-        {
-            name: 'A4 paper',
-            description: 'Lorem ipsum dolor sit, amet consectetur adipisicing elit. Blanditiis eius itaque quibusdam, ullam labore modi deleniti dolor vero iusto. Ab at illo quidem laboriosam natus maiores aliquam vitae esse quisquam.',
-            id: 3452432,
-            is_new: true,
-            discounts: null,
-            price: 23000,
-            discount_price: null,
-            image: copy
-        }
-    ]
 
 
     /// additional functions
@@ -127,17 +78,12 @@ function Main() {
     const handleAddToCart = (product) => {
         dispatch(addToCart(product));
     };
-    /// additional functions are finished
-
-
-
-
+    /// additional functions have finished
 
 
     //// module status
     const [module_status, setStatus] = useState()
-    //// module status finished
-
+    //// module status has finished
 
     ///// Login fetch
     const [opened, { open, close }] = useDisclosure(false);
@@ -177,10 +123,7 @@ function Main() {
             console.log(error);
         }
     };
-    //// Login fetch is finished
-
-
-
+    //// Login fetch has finished
 
     //// registration
     const [first_name, setFirstName] = useState()
@@ -210,14 +153,104 @@ function Main() {
             console.log(error);
         }
     };
-    //// registration is finished
+    //// registration has finished
 
 
+    //// Search field
+    const { Search } = Input;
+    const [search_Value, setSearchValue] = useState()
+    const [searchedProducts, setSearchedProducts] = useState()
+    useEffect(() => {
+        const fetchSearchRequest = async () => {
+            try {
+                const response = await axios.get(`https://globus-nukus.uz/api/products?search=${search_Value}`);
+                setSearchedProducts(response?.data?.data?.items || []);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        if (search_Value) {
+            fetchSearchRequest();
+        }
+    }, [search_Value]);
+    //// Search field has finished
+
+
+    const items = [
+        {
+            name: 'Calculator',
+            description: 'Lorem ipsum dolor sit, amet consectetur adipisicing elit. Blanditiis eius itaque quibusdam, ullam labore modi deleniti dolor vero iusto. Ab at illo quidem laboriosam natus maiores aliquam vitae esse quisquam.',
+            id: 213462,
+            is_new: false,
+            discounts: {
+                discount_rate: 10,
+                is_active: true,
+            },
+            price: 59900,
+            discount_price: 25600,
+            image: calculator
+        },
+        {
+            name: 'A4 paper',
+            description: 'Lorem ipsum dolor sit, amet consectetur adipisicing elit. Blanditiis eius itaque quibusdam, ullam labore modi deleniti dolor vero iusto. Ab at illo quidem laboriosam natus maiores aliquam vitae esse quisquam.',
+            id: 3452432,
+            is_new: true,
+            discounts: null,
+            price: 23000,
+            discount_price: null,
+            image: copy
+        }
+    ]
+
+
+    const main_Block = (list) => {
+        return (
+            <div className="Main-block">
+                {list.map((item) => (
+                    <div className='Product-block-item' key={item.id}>
+                        <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item.id } })}>
+                            <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
+                            <button onClick={() => handleLikeClick(item.id)}>
+                                <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
+                            </button>
+                            <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
+                                {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
+                            </span>
+                        </div>
+                        <div className="Product-block-item-info">
+                            <div className="Product-item-info-name">
+                                <span>{item.name}</span>
+                            </div>
+                            <div className="Product-item-info-disc">
+                                <div>
+                                    <p>{formatPrice(item.price)} so'm</p>
+                                    <span>{item?.discounts?.discount_rate} 12 %</span>
+                                </div>
+                            </div>
+                            <div className="Product-item-info-flex">
+                                <div className='Product-item-info-disprice'>
+                                    <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
+                                </div>
+                                <button onClick={() => {
+                                    handleAddToCart(item);
+                                    notifications.show({
+                                        title: 'Adding Product',
+                                        message: 'Product is added 🛒',
+                                        color: 'green',
+                                    });
+                                }}><i className="fa-solid fa-cart-arrow-down"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        )
+    }
 
 
     const CatalogPage = () => {
         const category_Products = products.filter((item) => item?.category === catalog?.category);
-
         if (catalog.status && category_Products.length > 0) {
             return (
                 <div className='Category-page'>
@@ -273,94 +306,16 @@ function Main() {
                 </div>
             );
         } else if (search_Value?.length > 0) {
-            const searchedProducts = products.filter((item) => item.name.toLowerCase().startsWith(search_Value.toLowerCase()));
-
-            if (searchedProducts.length > 0) {
+            if (searchedProducts?.length > 0) {
                 return (
-                    <div className="Main-block">
-                        {searchedProducts.map((item) => (
-                            <div className='Product-block-item' key={item.id}>
-                                <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item.id } })}>
-                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
-                                    <button onClick={() => handleLikeClick(item.id)}>
-                                        <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
-                                    </button>
-                                    <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
-                                        {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
-                                    </span>
-                                </div>
-                                <div className="Product-block-item-info">
-                                    <div className="Product-item-info-name">
-                                        <span>{item.name}</span>
-                                    </div>
-                                    <div className="Product-item-info-disc">
-                                        <div>
-                                            <p>{formatPrice(item.price)} so'm</p>
-                                            <span>{item?.discounts?.discount_rate} 12 %</span>
-                                        </div>
-                                    </div>
-                                    <div className="Product-item-info-flex">
-                                        <div className='Product-item-info-disprice'>
-                                            <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
-                                        </div>
-                                        <button onClick={() => {
-                                            handleAddToCart(item);
-                                            notifications.show({
-                                                title: 'Adding Product',
-                                                message: 'Product is added 🛒',
-                                                color: 'green',
-                                            });
-                                        }}><i className="fa-solid fa-cart-arrow-down"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    main_Block(searchedProducts)
                 );
             } else {
                 const filteredCategories = categories.filter((item) => item.name.toLowerCase().startsWith(search_Value.toLowerCase()));
                 if (filteredCategories.length > 0) {
                     const categoryProducts = products.filter(product => filteredCategories.some(category => category.id === product.categoryId));
                     return (
-                        <div className="Main-block">
-                            {categoryProducts.map((item) => (
-                                <div className='Product-block-item' key={item.id}>
-                                    <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item.id } })}>
-                                        <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
-                                        <button onClick={() => handleLikeClick(item.id)}>
-                                            <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
-                                        </button>
-                                        <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
-                                            {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
-                                        </span>
-                                    </div>
-                                    <div className="Product-block-item-info">
-                                        <div className="Product-item-info-name">
-                                            <span>{item.name}</span>
-                                        </div>
-                                        <div className="Product-item-info-disc">
-                                            <div>
-                                                <p>{formatPrice(item.price)} so'm</p>
-                                                <span>{item?.discounts?.discount_rate} 12 %</span>
-                                            </div>
-                                        </div>
-                                        <div className="Product-item-info-flex">
-                                            <div className='Product-item-info-disprice'>
-                                                <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
-                                            </div>
-                                            <button onClick={() => {
-                                                handleAddToCart(item);
-                                                notifications.show({
-                                                    title: 'Adding Product',
-                                                    message: 'Product is added 🛒',
-                                                    color: 'green',
-                                                });
-                                            }}><i className="fa-solid fa-cart-arrow-down"></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        main_Block(categoryProducts)
                     );
                 } else {
                     return <div style={{ display: 'flex', justifyContent: 'center' }}>No results found😢</div>;
@@ -379,7 +334,7 @@ function Main() {
                             onMouseLeave={autoplay.current.reset}
                         >
                             {
-                                items.map(item => (
+                                filteredProduct.map(item => (
                                     <Carousel.Slide id={item.id} key={item.id}>
                                         <div className='Main-ad-slide'>
                                             <div className='Main-ad-slide-inner'>
@@ -411,56 +366,28 @@ function Main() {
                             }
                         </Carousel>
                     </div>
-                    <div className="Main-block">
-                        {currentProducts.map((item) => (
-                            <div className='Product-block-item' key={item.id}>
-                                <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item.id } })}>
-                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
-                                    <button onClick={() => handleLikeClick(item.id)}>
-                                        <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
-                                    </button>
-                                    <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
-                                        {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
-                                    </span>
-                                </div>
-                                <div className="Product-block-item-info">
-                                    <div className="Product-item-info-name">
-                                        <span>{item.name}</span>
-                                    </div>
-                                    <div className="Product-item-info-disc">
-                                        <div>
-                                            <p>{formatPrice(item.price)} so'm</p>
-                                            <span>{item?.discounts?.discount_rate} 12 %</span>
-                                        </div>
-                                    </div>
-                                    <div className="Product-item-info-flex">
-                                        <div className='Product-item-info-disprice'>
-                                            <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
-                                        </div>
-                                        <button onClick={() => {
-                                            handleAddToCart(item);
-                                            notifications.show({
-                                                title: 'Adding Product',
-                                                message: 'Product is added 🛒',
-                                                color: 'green',
-                                            });
-                                        }}><i className="fa-solid fa-cart-arrow-down"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                    {main_Block(currentProducts)}
                     <div className="Pagination">
                         <Pagination
-                            total={Math.ceil(products.length / productsPerPage)}
                             page={currentPage}
                             onChange={paginate}
+                            total={Math.ceil(products.length / productsPerPage)}
+                            siblings={1}
+                            boundaries={0}
+                            size="md"
+                            color="grape"
+                            radius="xl"
+                            spacing="xs"
+                            withEdges={false}
+                            withControls
                         />
                     </div>
                 </div>
             );
         }
     };
+
+
     return (
         <div className='Main'>
             <div className="Main-top">
@@ -506,7 +433,7 @@ function Main() {
                         </div>
                     )}
                 </Modal>
-                <input type="checkbox" id='catalogMain' onClick={() => setCatalogStatus(!catalog_status)} />
+                <input type="checkbox" id='catalogMain' onClick={() => setCatalogStatus(!catalog_status)} checked={catalog_status} />
                 <div className="Main-categories">
                     <ul className="categories-grid">
                         {
@@ -515,12 +442,16 @@ function Main() {
                                 <li key={index} onClick={() => setCatalog({
                                     status: true,
                                     category: item?.id
-                                })}>{item.name}</li>
+                                },
+                                    setCatalogStatus(!catalog_status),
+                                    console.log(catalog_status)
+                                )}>{item.name}</li>
                             )
                             )
                         }
                     </ul>
                 </div>
+
                 <div className="Main-display" style={{ display: page === 'checkout' ? 'none' : 'block' }}>
                     <div className="Main-header" >
                         <div className="Main-header-logo">
@@ -605,10 +536,11 @@ function Main() {
 
                     </div>
                 </div>
+                <div>
+                </div>
                 {
                     page === 'main' ?
                         CatalogPage()
-
                         : page === 'myProfile' ?
                             <Main_profile />
                             : page === 'MySaved' ?
