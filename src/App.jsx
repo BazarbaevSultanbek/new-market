@@ -11,25 +11,26 @@ import '@mantine/core/styles.css';
 import Checkout from './components/Checkout/Checkout';
 import Profile from './components/Profile/Profile';
 import Catalog from './components/Catalog/Catalog';
-import { CssLoader } from './CssLoader';
 import Product from './components/Product/Product';
 import '@mantine/notifications/styles.css';
 import { Notifications } from '@mantine/notifications';
+import { CssLoader } from './CssLoader';
 
 function App() {
   return (
     <BrowserRouter>
       <MantineProvider>
-        <ModalsProvider theme={{
-          components: {
-            Loader: Loader.extend({
-              defaultProps: {
-                loaders: { ...Loader.defaultLoaders, custom: CssLoader },
-                type: 'custom',
-              },
-            }),
-          },
-        }}>
+        <ModalsProvider
+          theme={{
+            components: {
+              Loader: Loader.extend({
+                defaultProps: {
+                  loaders: { ...Loader.defaultLoaders, custom: CssLoader },
+                  type: 'custom',
+                },
+              }),
+            },
+          }}>
           <Notifications position="top-right" zIndex={1000} />
           <Routes>
             <Route path="/" element={<Home />}>

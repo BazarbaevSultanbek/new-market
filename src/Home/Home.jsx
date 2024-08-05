@@ -38,46 +38,46 @@ function Home() {
         let offset = 0;
         const limit = 20;
         let hasMoreProducts = true;
-    
+
         while (hasMoreProducts) {
-          try {
-            const response = await axios.get(`https://globus-nukus.uz/api/products?limit=${limit}&offset=${offset}`);
-            const catalogResponse = await axios.get('https://globus-nukus.uz/api/categories');
-    
-            const fetchedProducts = response.data.data.items;
-            const fetchedCategories = catalogResponse.data.data.categories;
-    
-            if (!Array.isArray(fetchedProducts) || fetchedProducts.length === 0) {
-              hasMoreProducts = false;
-            } else {
-              allProducts = [...allProducts, ...fetchedProducts];
-              offset += limit;
+            try {
+                const response = await axios.get(`https://globus-nukus.uz/api/products?limit=${limit}&offset=${offset}`);
+                const catalogResponse = await axios.get('https://globus-nukus.uz/api/categories');
+
+                const fetchedProducts = response.data.data.items;
+                const fetchedCategories = catalogResponse.data.data.categories;
+
+                if (!Array.isArray(fetchedProducts) || fetchedProducts.length === 0) {
+                    hasMoreProducts = false;
+                } else {
+                    allProducts = [...allProducts, ...fetchedProducts];
+                    offset += limit;
+                }
+
+                dispatch(setUpStates({
+                    products: allProducts,
+                    categories: fetchedCategories,
+                }));
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                hasMoreProducts = false;
             }
-    
-            dispatch(setUpStates({
-              products: allProducts,
-              categories: fetchedCategories,
-            }));
-          } catch (error) {
-            console.error('Error fetching products:', error);
-            hasMoreProducts = false;
-          }
-          setLoading(false);        
+            setLoading(false);
         }
-    
-      };
-    
-      useEffect(() => {
+
+    };
+
+    useEffect(() => {
         fetchAllProducts();
-      }, []);
-    
-      if (loading) {
+    }, []);
+
+    if (loading) {
         return (
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-            <Loader />
-          </div>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <Loader color="grape" />
+            </div>
         );
-      }
+    }
     // useEffect(() => {
     //     const fetchRequest = async () => {
     //         try {

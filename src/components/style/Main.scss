@@ -165,10 +165,37 @@
     }
 }
 
+.Main-cast-btn {
+    display: flex;
+    padding: 40px 20px 10px 20px;
+    gap: 30px;
+
+    button {
+        cursor: pointer;        
+        background: none;
+        border: none;
+        font-family: 'Roboto', sans-serif;
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+}
+
+.Main-new {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: center;
+    gap: 10px;
+    padding: 0 7px 100px 7px;
+    overflow: hidden;
+}
+
+
+
 
 
 .Main-block {
-    margin-top: 50px;
     display: flex;
     flex-wrap: wrap;
     align-items: start;
@@ -408,6 +435,10 @@
             width: 100%;
             height: 100%;
         }
+    }
+
+    .Main-new {
+        margin: 0 auto;
     }
 
     .Main-block {
@@ -684,6 +715,14 @@
         }
     }
 
+    .Main-cast-btn {
+        padding: 20px 60px;
+    }
+
+    .Main-new {
+        gap: 30px;
+    }
+
     .Main-block {
         gap: 30px;
     }
@@ -880,6 +919,10 @@
         }
     }
 
+
+    .Main-cast-btn {
+        padding: 20px 80px;
+    }
 
 
     .Main-header-profile {

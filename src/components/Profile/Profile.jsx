@@ -11,6 +11,7 @@ import { DatePickerInput } from '@mantine/dates'
 import '@mantine/dates/styles.css';
 import '../style/Profile.scss'
 import { fetchUserProfile, loadUserDataFromCookies } from '../../store/Reducers/Reducer';
+import dayjs from 'dayjs';
 
 function Profile() {
     const dispatch = useDispatch();
@@ -19,6 +20,9 @@ function Profile() {
 
 
     const [module_status, setStatus] = useState()
+    const [validation_status, setValidation] = useState(false)
+    const [countdown, setCountdown] = useState(0);
+
 
     //// Login
     const [opened, { open, close }] = useDisclosure(false);
@@ -75,16 +79,19 @@ function Profile() {
     const icon = <IconCalendar style={{ width: rem(18), height: rem(18) }} stroke={1.5} />;
 
     const fetchRegistration = async () => {
+        const formattedDate = date_of_birth ? dayjs(date_of_birth).format('YYYY-MM-DD') : null;
         try {
             const RegistResponse = await axios.post('https://globus-nukus.uz/api/users', {
                 first_name: first_name,
                 last_name: last_name,
                 password: pass_word,
                 phone: phone_number,
-                date_of_birth: date_of_birth,
+                date_of_birth: formattedDate,
                 gender: gender,
             });
             console.log(RegistResponse.data);
+            setCountdown(60)
+            setValidation(true)
         } catch (error) {
             showNotification({
                 title: 'Error',
@@ -97,6 +104,77 @@ function Profile() {
 
     /////
 
+    //// validation
+
+    const [code, setCode] = useState()
+
+    const fetchValidation = async () => {
+
+        try {
+            const response = await axios.post('https://globus-nukus.uz/api/users/verify', {
+                phone: phone_number,
+                otp: code,
+            })
+
+            const { access, refresh } = response.data.data.token;
+
+            Cookies.set('token', access, { expires: 14 });
+            Cookies.set('refresh_token', refresh, { expires: 14 });
+
+            dispatch(fetchUserProfile()).then(() => {
+                dispatch(loadUserDataFromCookies());
+            });
+
+            setValidation(false)
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    //// validation has finished
+
+
+    //// VALIDATION TIME FUNCTION
+
+    const [resend_status, setResend_status] = useState(false)
+
+    useEffect(() => {
+        let interval;
+        if (countdown > 0) {
+            setResend_status(false)
+            interval = setInterval(() => {
+                setCountdown((prevCountdown) => prevCountdown - 1);
+                console.log(countdown);
+            }, 1000);
+        } else if (countdown === 0) {
+            setResend_status(true);
+        }
+        return () => clearInterval(interval);
+    }, [countdown]);
+
+    ////VALIDATION TIME FUNCTION FINISHED
+
+
+
+    //// RESEND CODE FUNCTION
+    const handleResendCode = async () => {
+        try {
+            const response = await axios.post('https://globus-nukus.uz/api/users/resend-otp', {
+                phone: phoneNumber,
+            });
+            console.log(response);
+            setResendMessage('A new code has been sent to your phone.');
+        } catch (error) {
+            showNotification({
+                title: 'Error',
+                message: 'Failed to resend the code. Please try again later.',
+                color: 'red',
+            });
+        }
+    };
+    /// RESEND CODE FUNCTION FINISHED
+
+
     return (
         <div className='Profile'>
             <div className="container">
@@ -106,7 +184,19 @@ function Profile() {
                         <TextInput label="Phone Number" withAsterisk placeholder="998 99 999 99 99" id='InputNumber' onChange={(e) => setPhoneNumber(e.currentTarget.value)} />
                         <TextInput label="Password" withAsterisk placeholder="Password" id='InputPassword' onChange={(e) => setPassword(e.currentTarget.value)} />
                         <Button type='submit' id='SubmitIn' onClick={() => fetchLogIn()}>Sign in</Button>
-                    </div> :
+                    </div> : validation_status ?
+                        <div className='Module-validation'>
+                            <Text style={{ textAlign: 'center' }} id='title'>Validation</Text>
+                            <TextInput placeholder="Verification code" id='codeInput' onChange={(e) => setCode(e.currentTarget.value)} />
+                            <div className='Module-validation-btn'>
+                                < Button type='submit' id="CodeSubmit" onClick={fetchValidation}>Submit</Button>
+                                {
+                                    !resend_status ? <Button fullWidth mt="xl" variant="outline" color="rgba(33, 107, 255, 1)" id='resend' disabled>{`Resend code after 00:${countdown}`}</Button>
+                                        : <Button fullWidth mt="xl" variant="outline" id='resend' color="rgba(33, 107, 255, 1)" onClick={handleResendCode}>Resend code</Button>}
+                            </div>
+                        </div>
+                        :
+
                         <div className='Module-inner-regist'>
                             <Text style={{ textAlign: 'center' }} id='title'>Registration</Text>
                             <TextInput
@@ -178,29 +268,6 @@ function Profile() {
 
                         }
                     </div>
-                    <div className="Profile-category">
-                        <input type="checkbox" id='categories' />
-                        <label htmlFor='categories'>
-                            <svg data-v-cd61c950="" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui-icon ">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M7.5 3C6.67157 3 6 3.67157 6 4.5H18C18 3.67157 17.3284 3 16.5 3H7.5ZM4.5 7.5C4.5 6.67157 5.17157 6 6 6H18C18.8284 6 19.5 6.67157 19.5 7.5H4.5ZM3 11.25C3 10.0074 4.00736 9 5.25 9H18.75C19.9926 9 21 10.0074 21 11.25V18.75C21 19.9926 19.9926 21 18.75 21H5.25C4.00736 21 3 19.9926 3 18.75V11.25ZM5.25 10.5C4.83579 10.5 4.5 10.8358 4.5 11.25V18.75C4.5 19.1642 4.83579 19.5 5.25 19.5H18.75C19.1642 19.5 19.5 19.1642 19.5 18.75V11.25C19.5 10.8358 19.1642 10.5 18.75 10.5H5.25Z" fill="#3131C4"></path>
-                            </svg>
-                            Categories
-                        </label>
-                        <ul>
-                            {
-                                categories.map((category) => {
-                                    return (
-                                        <li id={category.id} key={category.id}>
-                                            <Link id={category.id}>
-                                                <span>{category.name}</span>
-                                                <span></span>
-                                            </Link>
-                                        </li>
-                                    )
-                                })
-                            }
-                        </ul>
-                    </div>
                     <div className="Profile-block">
                         <div className='Profile-block-orders'>
                             <Link>
@@ -208,12 +275,6 @@ function Profile() {
                                     <path fillRule="evenodd" clipRule="evenodd" d="M12 2.5C10.2402 2.5 9 3.88779 9 5.5H15C15 3.88779 13.7598 2.5 12 2.5ZM7.5 9.5V7H5.5V12.25C5.5 12.6642 5.16421 13 4.75 13C4.33578 13 4 12.6642 4 12.25V6.25V5.5H4.75H7.5C7.5 3.11221 9.35984 1 12 1C14.6402 1 16.5 3.11221 16.5 5.5H19.25H20V6.25V19.75C20 20.9926 18.9926 22 17.75 22H13.25C12.8358 22 12.5 21.6642 12.5 21.25C12.5 20.8358 12.8358 20.5 13.25 20.5H17.75C18.1642 20.5 18.5 20.1642 18.5 19.75V7H16.5V9.5H15V7H9V9.5H7.5ZM12.2738 16.0323C12.5667 15.7395 12.5667 15.2646 12.2738 14.9717C11.9809 14.6788 11.506 14.6788 11.2131 14.9717L5.99548 20.1893L3.78034 17.9742C3.48744 17.6813 3.01257 17.6813 2.71968 17.9741C2.42678 18.267 2.42677 18.7419 2.71966 19.0348L5.46513 21.7803C5.60579 21.921 5.79655 22 5.99547 22C6.19438 22 6.38515 21.921 6.5258 21.7803L12.2738 16.0323Z" fill="#141415"></path>
                                 </svg>
                                 <span>My orders</span>
-                            </Link>
-                        </div>
-                        <div className='Profile-block-saved'>
-                            <Link>
-                                <i className='fa-regular fa-heart'></i>
-                                <span>Saved Products</span>
                             </Link>
                         </div>
                         <div className='Profile-block-location'>
@@ -233,7 +294,7 @@ function Profile() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         </div >
     )
 }
