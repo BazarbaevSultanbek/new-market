@@ -9,13 +9,15 @@ import '../style/Checkout.scss';
 import { useLocation } from 'react-router';
 import axios from 'axios';
 import MapSelector from './MapSelector';
+import Cookies from 'js-cookie';
 function Checkout() {
     const currentUser = useSelector(state => state?.shop?.currentUser?.user);
     const cart = useSelector(state => state?.shop?.currentUser?.cart);
     const location = useLocation();
     const total = location?.state?.total - (currentUser?.cashback_balance || 0);
+
     const [type, setType] = useState('');
-    const [place, setPlace] = useState()
+    const [place, setPlace] = useState();
     const [token, setToken] = useState();
     const [cardModalOpen, setCardModalOpen] = useState(false);
     const [cardNumber, setCardNumber] = useState('');
@@ -25,30 +27,133 @@ function Checkout() {
     const [receiptModalOpen, setReceiptModalOpen] = useState(false);
     const [orderId, setOrderId] = useState('');
     const [selectedLocation, setSelectedLocation] = useState(null);
-    const handleCashPayment = async () => {
-        try {
-            const response = await axios.post('https://globus-nukus.uz/api/receipts/receipts_create', {
-                amount: total,
-                order_id: orderId,
-            });
 
-            if (response.data.success) {
-                const invoiceId = response.data.data.receipt._id;
 
-                alert('Your order is confirmed successfully!');
-                setReceiptModalOpen(false);
+    useEffect(() => {
+        setToken(Cookies.get('token'))
+    }, [])
+
+
+    const [surname, setSurName] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+
+    useEffect(() => {
+        setSurName(currentUser?.last_name || '');
+        setFirstName(currentUser?.first_name || '');
+        setPhoneNumber(currentUser?.phone || '');
+    }, [currentUser]);
+
+
+
+    const [min_price, setMin_price] = useState()
+    const [distance, setDistance] = useState()
+    const [price_km, setPrice_km] = useState()
+    useEffect(() => {
+        const fetchDelivery = async () => {
+            try {
+                const response = await axios.get('https://globus-nukus.uz/api/delivery');
+                setMin_price(response?.data?.data?.delivery?.min_amount);
+                setDistance(response?.data?.data?.delivery?.free_distance);
+                setPrice_km(response?.data?.data?.delivery?.price_per_km);
+            } catch (error) {
+                console.error('Error fetching delivery data:', error);
             }
-        } catch (error) {
-            console.error('Error creating receipt:', error);
-            alert('An error occurred while creating the receipt. Please try again later.');
+        };
+        fetchDelivery();
+    }, []);
+
+    const handleCashPayment = async () => {
+        if (firstName && surname && phoneNumber.length <= 12 && place) {
+            try {
+                if (!token) {
+                    alert('Token is missing.');
+                    return;
+                }
+
+                const ws = new WebSocket(`wss://globus-nukus.uz/ws/orders?token=${token}`);
+
+                ws.onopen = () => {
+                    const order = {
+                        type: "create_order",
+                        message: {
+                            amount: total,
+                            payment_type: type === 'cash' ? 2 : 1,
+                            delivery_type: place === 'delivery' ? 2 : 1,
+                            use_cashback: true,
+                            receiver: {
+                                first_name: firstName,
+                                last_name: surname,
+                                phone: phoneNumber,
+                                longitude: selectedLocation?.longitude || 0,
+                                latitude: selectedLocation?.latitude || 0,
+                            },
+                            items: cart.map(item => ({
+                                product: item.product.id,
+                                price: item.product.discount_price || item.product.price,
+                                quantity: item.count,
+                            })),
+                        }
+                    };
+                    ws.send(JSON.stringify(order));
+                };
+
+                ws.onmessage = (event) => {
+                    const response = JSON.parse(event.data);
+                    if (response.type === 'order_created') {
+                        console.log('response', response?.data);
+                        setOrderId(response.order_number);
+                        alert('Order created successfully!');
+                        navigate('/')
+                    } else {
+                        console.log(response);
+                        alert('Failed to create order. Please try again.');
+                    }
+                };
+
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    alert('WebSocket error. Please try again.');
+                };
+
+            } catch (error) {
+                console.error('Error during cash payment process:', error);
+                alert('An error occurred while processing the payment. Please try again later.');
+            }
+        } else {
+            alert('You need to write your name, surname, and phone number correctly and choose the obtaining method!');
         }
     };
 
+
     const handleCardPayment = () => {
-        setCardModalOpen(true);
+        if (firstName && surname && phoneNumber.length <= 11 && place) {
+            setCardModalOpen(true);
+        } else {
+            alert('You need to write your name, surname, and phone number and choose the obtaining method!');
+        }
     };
 
-    /// change card number format
+    const handleAddCard = async () => {
+        try {
+            const response = await axios.post('https://globus-nukus.uz/api/cards/create_card', {
+                card_number: cardNumber,
+                expire: cardExpire,
+            });
+            if (response.data.success) {
+                setToken(response?.data?.data?.card?.token);
+                setCardModalOpen(false);
+                const verifyResponse = await axios.post('https://globus-nukus.uz/api/cards/get_verify_code', { token: response?.data?.data?.card?.token });
+                if (verifyResponse.data.success) {
+                    setVerifyModalOpen(true);
+                }
+            }
+        } catch (error) {
+            console.error('Error adding card:', error);
+        }
+    };
+
     const handleChangeCardNumber = (event) => {
         let input = event.target.value.replace(/\D/g, '');
         let formattedInput = '';
@@ -61,7 +166,6 @@ function Checkout() {
         setCardNumber(formattedInput);
     };
 
-    /// change card expire date format
     const handleChangeExpire = (event) => {
         let input = event.target.value.replace(/\D/g, '');
         if (input.length > 2) {
@@ -70,47 +174,74 @@ function Checkout() {
         setCardExpire(input);
     };
 
-    const handleAddCard = async () => {
-        try {
-            const response = await axios.post('https://globus-nukus.uz/api/cards/create_card', {
-                card_number: cardNumber,
-                expire: cardExpire,
-            });
-
-            if (response.data.success) {
-                setToken(response?.data?.data?.card?.token);
-                setCardModalOpen(false);
-
-                const verifyResponse = await axios.post('https://globus-nukus.uz/api/cards/get_verify_code', { token: response?.data?.data?.card?.token });
-                if (verifyResponse.data.success) {
-                    setVerifyModalOpen(true);
-                }
-            }
-        } catch (error) {
-            console.error('Error adding card:', error);
-        }
-    };
-
     const handleVerifyCard = async () => {
         try {
             const response = await axios.post('https://globus-nukus.uz/api/cards/verify_card', {
                 token: token,
                 code: verifyCode,
             });
-
             if (response.data.success) {
                 setVerifyModalOpen(false);
+                createOrder()
                 setReceiptModalOpen(true);
             } else {
-                console.error('Verification failed:', response.data);
-                setVerifyModalOpen(false);
                 alert('Verification failed. Please check the verification code and try again.');
             }
         } catch (error) {
-            console.error('Error verifying card:', error.response ? error.response.data : error.message);
-            setVerifyModalOpen(false);
+            console.error('Error verifying card:', error);
             alert('An error occurred while verifying the card. Please try again later.');
         }
+
+    };
+
+    const createOrder = async () => {
+        if (!token) {
+            alert('Token is missing.');
+            return;
+        }
+
+        const ws = new WebSocket(`wss://globus-nukus.uz/ws/orders?token=${token}`);
+
+        ws.onopen = () => {
+            const order = {
+                type: "create_order",
+                message: {
+                    amount: total,
+                    payment_type: type === 1,
+                    delivery_type: place === 'delivery' ? 2 : 1,
+                    use_cashback: true,
+                    receiver: {
+                        first_name: firstName,
+                        last_name: surname,
+                        phone: phoneNumber,
+                        longitude: selectedLocation?.longitude || 0,
+                        latitude: selectedLocation?.latitude || 0,
+                    },
+                    items: cart.map(item => ({
+                        product: item.product.id,
+                        price: item.product.discount_price || item.product.price,
+                        quantity: item.count,
+                    })),
+                }
+            };
+            ws.send(JSON.stringify(order));
+        };
+
+        ws.onmessage = (event) => {
+            const response = JSON.parse(event.data);
+            if (response.type === 'order_created') {
+                setOrderId(response.order_number);
+                alert('Order created successfully!');
+                setReceiptModalOpen(true);
+            } else {
+                alert('Failed to create order. Please try again.');
+            }
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            alert('WebSocket error. Please try again.');
+        };
     };
 
     const handleCreateReceipt = async () => {
@@ -139,40 +270,6 @@ function Checkout() {
         }
     };
 
-    const [surname, setSurName] = useState();
-    const [firstName, setFirstName] = useState();
-    const [phoneNumber, setPhoneNumber] = useState();
-
-    useEffect(() => {
-        setSurName(currentUser?.last_name);
-        setFirstName(currentUser?.first_name);
-        setPhoneNumber(currentUser?.phone);
-    }, [currentUser]);
-
-
-
-    const [min_price, setMin_price] = useState()
-    const [distance, setDistance] = useState()
-    const [price_km, setPrice_km] = useState()
-
-
-
-    useEffect(() => {
-        const fetchDelivery = async () => {
-            const response = await axios.get('https://globus-nukus.uz/api/delivery')
-
-            try {
-                setMin_price(response?.data?.data?.delivery?.min_amount)
-                setDistance(response?.data?.data?.delivey?.free_distance)
-                setPrice_km(response?.data?.data?.delivery?.price_per_km)
-            } catch (error) {
-                console.log(error)
-            }
-        }
-
-        fetchDelivery()
-    }, [])
-
 
     return (
         <div className='Checkout'>
@@ -194,7 +291,7 @@ function Checkout() {
                                 <h4>Pick-up point of Globus Nukus №1</h4>
                             </div>
                             <div className="type-delivery">
-                                <input type="radio" id='delivery' name='place' onClick={() => setPlace('delivery')} disabled={total < 200000} />
+                                <input type="radio" id='delivery' name='place' onClick={() => setPlace('delivery')} disabled={total < min_price} />
                                 <div> <h4>Delivery method</h4>
                                     <p>Minimum sum must be {min_price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm</p></div>
                             </div>
@@ -251,29 +348,33 @@ function Checkout() {
                     <div className="Checkout-block-order">
                         <div className="Checkout-block-order-done">
                             <p>{total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm</p>
-                            <Button onClick={type === "card" && firstName.length > 0 && phoneNumber.length > 0 && place.length > 0 ? handleCardPayment : handleCashPayment} color='#7f4dff'>
+                            <Button onClick={type === "card" && firstName?.length > 0 && phoneNumber?.length > 0 && place?.length > 0 ? handleCardPayment : handleCashPayment} color='#7f4dff'>
                                 {type === "card" ? 'Pay by Card' : 'Order'}
                             </Button>
                         </div>
                     </div>
                 </div>
             </div >
-            <Modal opened={cardModalOpen} onClose={() => setCardModalOpen(false)} title="Add Card Information">
-                <Group direction="column" grow>
-                    <TextInput label="Card Number" placeholder='Card Number...' value={cardNumber} onChange={handleChangeCardNumber} />
-                    <TextInput label="Expire Date" placeholder='MM/YY' value={cardExpire} onChange={handleChangeExpire} />
+            <Modal opened={cardModalOpen} onClose={() => setCardModalOpen(false)} title="Add Card">
+                <TextInput label="Card Number" value={cardNumber} onChange={handleChangeCardNumber} />
+                <TextInput label="Expiry Date" value={cardExpire} onChange={handleChangeExpire} />
+                <Group position="right">
                     <Button onClick={handleAddCard}>Add Card</Button>
                 </Group>
             </Modal>
+
+            {/* Verification Modal */}
             <Modal opened={verifyModalOpen} onClose={() => setVerifyModalOpen(false)} title="Verify Card">
-                <Group direction="column" grow>
-                    <TextInput label="Verification Code" placeholder='Verification Code...' value={verifyCode} onChange={(e) => setVerifyCode(e.currentTarget.value)} />
-                    <Button onClick={handleVerifyCard}>Verify Card</Button>
+                <TextInput label="Verification Code" value={verifyCode} onChange={(e) => setVerifyCode(e.currentTarget.value)} />
+                <Group position="right">
+                    <Button onClick={handleVerifyCard}>Verify</Button>
                 </Group>
             </Modal>
-            <Modal opened={receiptModalOpen} onClose={() => setReceiptModalOpen(false)} title="Payment Confirmation">
-                <Group direction="column" grow>
-                    <Button onClick={handleCreateReceipt}>Pay and Confirm Order</Button>
+
+            {/* Receipt Modal */}
+            <Modal opened={receiptModalOpen} onClose={() => setReceiptModalOpen(false)} title="Receipt">
+                <Group position="right">
+                    <Button onClick={handleCreateReceipt}>Create Receipt</Button>
                 </Group>
             </Modal>
         </div >

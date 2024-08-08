@@ -51,6 +51,12 @@ input {
 
 
 
+
+.Checkout-block-btn {
+    display: none;
+}
+
+
 .Checkout-block-info-navi {
     display: flex;
     flex-direction: column;
@@ -111,6 +117,7 @@ input {
 }
 
 .Checkout-block-order {
+    display: block;
     position: fixed;
     bottom: 70px;
     background: white;
@@ -186,11 +193,6 @@ input {
         font-weight: 700;
         font-size: 20px;
     }
-}
-
-
-.Checkout-block-order {
-    display: none;
 }
 
 @media screen and (min-width:768px) {

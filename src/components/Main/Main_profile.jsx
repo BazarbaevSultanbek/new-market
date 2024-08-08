@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react';
 import { Button, Group, Radio, rem, TextInput } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { IconCalendar } from '@tabler/icons-react';
@@ -14,8 +14,11 @@ function Main_profile() {
 
     const [dataPage, setDataPage] = useState('orders');
     const [showButtons, setShowButtons] = useState(false);
+    const [orders, setOrders] = useState([]);
+    const [socket, setSocket] = useState(null);
     const icon = <IconCalendar style={{ width: rem(18), height: rem(18) }} stroke={1.5} />;
 
+    // User profile state
     const [surname, setSurName] = useState('');
     const [first_name, setFirstName] = useState('');
     const [date_of_birth, setDate] = useState('');
@@ -29,6 +32,50 @@ function Main_profile() {
         setGender(currentUser?.user?.gender);
         setPhoneNumber(currentUser?.user?.phone);
     }, [currentUser]);
+
+    useEffect(() => {
+        const token = Cookies.get('token');
+        let ws;
+        const connectWebSocket = () => {
+            ws = new WebSocket(`wss://globus-nukus.uz/ws/orders?token=${token}`);
+
+            ws.onopen = () => {
+                console.log('WebSocket connection opened');
+                ws.send(JSON.stringify({ type: 'get_orders' }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'get_orders' && data.success) {
+                    setOrders(data.data.orders);
+                }
+            };
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+
+            ws.onclose = (event) => {
+                console.log('WebSocket connection closed', event);
+                if (!event.wasClean) {
+                    console.error('WebSocket connection closed with code:', event.code);
+                    // Retry after a delay
+                    setTimeout(connectWebSocket, 3000);
+                }
+            };
+        };
+
+        connectWebSocket();
+
+        return () => {
+            if (ws) {
+                ws.close();
+            }
+        };
+    }, []);
+
+
 
     const handleInputChange = () => {
         setShowButtons(true);
@@ -60,8 +107,6 @@ function Main_profile() {
         }
     };
 
-    console.log(currentUser)
-
     const handleCancel = () => {
         setSurName(currentUser?.user?.last_name);
         setFirstName(currentUser?.user?.first_name);
@@ -91,7 +136,30 @@ function Main_profile() {
                         {
                             dataPage === 'orders' ?
                                 <div className='Info-block-data-orders'>
-                                    Nothing is here 😑!
+                                    {orders.length > 0 ? (
+                                        <ul className='Info-block-data-ul'>
+                                            {orders.map(order => (
+                                                <li key={order.id} className="Info-block-data-order">
+                                                    <h3>Order Number: {order.order_number}</h3>
+                                                    <p id="status">Status: <span>{order.status}</span></p>
+                                                    <p>Amount: {order.amount} so'm</p>
+                                                    <p>Delivery Type: {order.delivery_type === 1 ? "Pickup" : "Delivery"}</p>
+                                                    <p>Payment Type: {order.payment_type === 1 ? "Online" : "Cash on Delivery"}</p>
+                                                    <p>Receiver: {order.receiver.first_name} {order.receiver.last_name}</p>
+                                                    <p>Products:</p>
+                                                    <ul>
+                                                        {order.items.map(item => (
+                                                            <li key={item.product} className='Info-data-order-product'>
+                                                                {item.product_name} - {item.quantity} x {item.price}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p>Nothing is here 😑!</p>
+                                    )}
                                 </div>
                                 :
                                 <div className="Info-block-data-navi">

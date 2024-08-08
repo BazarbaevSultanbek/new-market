@@ -201,7 +201,7 @@ function Main() {
                     </div>
                     <div className="Main-top-info-text">
                         <a href="#">Ask a question</a>
-                        <a href="#">My orders</a>
+                        <p onClick={() => setPage('myProfile')}>My orders</p>
                     </div>
                 </div>
             </div>
@@ -241,7 +241,7 @@ function Main() {
                         {
                             categories.map((item, index) =>
                             (
-                                <li key={index} onClick={() => (setCatalog(item?.id), setCatalogStatus(!catalog_status))}>{item.name}</li>
+                                <li key={index} onClick={() => { setCatalog(item?.id), setCatalogStatus(!catalog_status) }}>{item.name}</li>
                             )
                             )
                         }

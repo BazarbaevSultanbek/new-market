@@ -35,20 +35,15 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
 
     useEffect(() => {
         const fetchSingleCategory = async () => {
-            console.log(catalog);
             if (catalog) {
-                const response = axios.get(`https://globus-nukus.uz/api/categories/${catalog}`)
-                try {
-                    console.log(response)
-                    setCategory_products(response?.data?.data?.categories)
-                } catch (error) {
-                    console.log(error)
-                }
+                const response = products?.filter((item) => item?.category === catalog);
+                setCategory_products(response || []);
             }
-        }
+        };
 
-        fetchSingleCategory()
-    }, [catalog])
+        fetchSingleCategory();
+    }, [catalog, products]);
+
 
 
     //// Search field    
@@ -222,7 +217,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
 
 
 
-    if (catalog?.length > 0 && category_Products?.length > 0) {
+    if (catalog && category_Products?.length > 0) {
         return (
             <div className='Category-page'>
                 <div className="Category-block">

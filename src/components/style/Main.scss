@@ -171,7 +171,7 @@
     gap: 30px;
 
     button {
-        cursor: pointer;        
+        cursor: pointer;
         background: none;
         border: none;
         font-family: 'Roboto', sans-serif;
@@ -799,6 +799,27 @@
             h2 {
                 font-family: 'Roboto', sans-serif;
             }
+        }
+    }
+
+    .Info-block-data-ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 30px;
+    }
+
+    .Info-block-data-order {
+        margin: 20px;
+
+        #status {
+            span {
+                color: green;
+            }
+        }
+
+        .Info-data-order-product {
+            margin-left: 20px;
+            max-width: 250px;
         }
     }
 
