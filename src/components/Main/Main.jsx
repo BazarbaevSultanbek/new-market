@@ -27,8 +27,10 @@ function Main() {
     const dispatch = useDispatch()
     const currentUser = useSelector(state => state?.shop?.currentUser)
     const categories = useSelector(state => state?.shop?.categories)
+    const InOrder_categories = [...categories]?.sort((a, b) => a.name.localeCompare(b.name));
     const likedProducts = useSelector(state => state?.shop?.likedProducts)
     const cart = useSelector(state => state?.shop?.cart)
+
 
     const { Search } = Input;
     const [search_Value, setSearchValue] = useState()
@@ -238,15 +240,14 @@ function Main() {
                 <input type="checkbox" id='catalogMain' onClick={() => setCatalogStatus(!catalog_status)} checked={catalog_status} />
                 <div className="Main-categories">
                     <ul className="categories-grid">
-                        {
-                            categories.map((item, index) =>
-                            (
-                                <li key={index} onClick={() => { setCatalog(item?.id), setCatalogStatus(!catalog_status) }}>{item.name}</li>
-                            )
-                            )
-                        }
+                        {InOrder_categories.map((item, index) => (
+                            <li key={index} onClick={() => { setCatalog(item?.id), setCatalogStatus(!catalog_status) }}>
+                                {item.name}
+                            </li>
+                        ))}
                     </ul>
                 </div>
+
 
                 <div className="Main-display" style={{ display: page === 'checkout' ? 'none' : 'block' }}>
                     <div className="Main-header" >

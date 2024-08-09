@@ -195,6 +195,17 @@ input {
     }
 }
 
+
+#cardNumber {
+    margin: 0px 0 10px 0 !important;
+}
+
+.mantine-TextInput-root {
+    margin: 10px 0;
+}
+
+
+
 @media screen and (min-width:768px) {
     .Checkout-block-place-type {
         flex-direction: row;

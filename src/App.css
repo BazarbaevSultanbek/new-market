@@ -16,12 +16,14 @@
 .Main-categories ul {
     list-style: none;
     font-family: 'Roboto', sans-serif;
-    font-size: 13px;
+    font-size: 10px;
 }
 
 .Main-categories li {
-    margin: 5px 0;
     cursor: pointer;
+    max-width: 120px;
+    overflow: hidden;
+    height: 18px;
 }
 
 #catalogMain {

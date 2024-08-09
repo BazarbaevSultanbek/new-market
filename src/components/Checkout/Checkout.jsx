@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { TextInput, Button, Modal, Group } from '@mantine/core';
 import { useSelector } from 'react-redux';
 import mastercard from '../cards/mastercard.svg';
+import { showNotification } from '@mantine/notifications';
 import uzcard from '../cards/uzcard.svg';
 import humo from '../cards/humo.svg';
 import visa from '../cards/visa.svg';
 import '../style/Checkout.scss';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import axios from 'axios';
 import MapSelector from './MapSelector';
 import Cookies from 'js-cookie';
@@ -16,8 +17,8 @@ function Checkout() {
     const location = useLocation();
     const total = location?.state?.total - (currentUser?.cashback_balance || 0);
 
-    const [type, setType] = useState('');
-    const [place, setPlace] = useState();
+    const [type, setType] = useState('cash');
+    const [place, setPlace] = useState('pick-up');
     const [token, setToken] = useState();
     const [cardModalOpen, setCardModalOpen] = useState(false);
     const [cardNumber, setCardNumber] = useState('');
@@ -27,7 +28,7 @@ function Checkout() {
     const [receiptModalOpen, setReceiptModalOpen] = useState(false);
     const [orderId, setOrderId] = useState('');
     const [selectedLocation, setSelectedLocation] = useState(null);
-
+    const navigate = useNavigate()
 
     useEffect(() => {
         setToken(Cookies.get('token'))
@@ -64,10 +65,14 @@ function Checkout() {
     }, []);
 
     const handleCashPayment = async () => {
-        if (firstName && surname && phoneNumber.length <= 12 && place) {
+        if (firstName && surname && phoneNumber && place) {
             try {
                 if (!token) {
-                    alert('Token is missing.');
+                    showNotification({
+                        title: 'Error',
+                        message: 'Token is missing.',
+                        color: 'red',
+                    });
                     return;
                 }
 
@@ -103,35 +108,63 @@ function Checkout() {
                     if (response.type === 'order_created') {
                         console.log('response', response?.data);
                         setOrderId(response.order_number);
-                        alert('Order created successfully!');
+                        showNotification({
+                            title: 'Success',
+                            message: 'Order created successfully!',
+                            color: 'green',
+                        });
+                        setReceiptModalOpen(true);
                         navigate('/')
                     } else {
                         console.log(response);
-                        alert('Failed to create order. Please try again.');
+                        showNotification({
+                            title: 'Error',
+                            message: 'Failed to create order. Please try again.',
+                            color: 'red',
+                        });
                     }
                 };
 
 
                 ws.onerror = (error) => {
                     console.error('WebSocket error:', error);
-                    alert('WebSocket error. Please try again.');
+                    showNotification({
+                        title: 'WebSocket Error',
+                        message: 'WebSocket error. Please try again.',
+                        color: 'red',
+                    });
                 };
 
             } catch (error) {
                 console.error('Error during cash payment process:', error);
-                alert('An error occurred while processing the payment. Please try again later.');
+                showNotification({
+                    title: 'Error',
+                    message: 'An error occurred while processing the payment. Please try again later.',
+                    color: 'red',
+                });
             }
         } else {
-            alert('You need to write your name, surname, and phone number correctly and choose the obtaining method!');
+            showNotification({
+                title: 'Warning',
+                message: 'You need to write your name, surname, and phone number correctly and choose the obtaining method!',
+                color: 'yellow',
+            });
         }
     };
 
 
+
+
+
     const handleCardPayment = () => {
-        if (firstName && surname && phoneNumber.length <= 11 && place) {
+        if (firstName && surname && phoneNumber && place) {
             setCardModalOpen(true);
         } else {
-            alert('You need to write your name, surname, and phone number and choose the obtaining method!');
+            showNotification({
+                title: 'Warning',
+                message: 'You need to write your name, surname, and phone number and choose the obtaining method!',
+                color: 'yellow',
+            });
         }
     };
 
@@ -150,7 +183,11 @@ function Checkout() {
                 }
             }
         } catch (error) {
-            console.error('Error adding card:', error);
+            showNotification({
+                title: 'Error',
+                message: 'Error adding card. Please try again.',
+                color: 'red',
+            });
         }
     };
 
@@ -185,18 +222,30 @@ function Checkout() {
                 createOrder()
                 setReceiptModalOpen(true);
             } else {
-                alert('Verification failed. Please check the verification code and try again.');
+                showNotification({
+                    title: 'Verification Failed',
+                    message: 'Verification failed. Please check the verification code and try again.',
+                    color: 'red',
+                });
             }
         } catch (error) {
             console.error('Error verifying card:', error);
-            alert('An error occurred while verifying the card. Please try again later.');
+            showNotification({
+                title: 'Error',
+                message: 'An error occurred while verifying the card. Please try again later.',
+                color: 'red',
+            });
         }
 
     };
 
     const createOrder = async () => {
         if (!token) {
-            alert('Token is missing.');
+            showNotification({
+                title: 'Error',
+                message: 'Token is missing.',
+                color: 'red',
+            });
             return;
         }
 
@@ -231,16 +280,28 @@ function Checkout() {
             const response = JSON.parse(event.data);
             if (response.type === 'order_created') {
                 setOrderId(response.order_number);
-                alert('Order created successfully!');
+                showNotification({
+                    title: 'Success',
+                    message: 'Order created successfully!',
+                    color: 'green',
+                });
                 setReceiptModalOpen(true);
             } else {
-                alert('Failed to create order. Please try again.');
+                showNotification({
+                    title: 'Error',
+                    message: 'Failed to create order. Please try again.',
+                    color: 'red',
+                });
             }
         };
 
         ws.onerror = (error) => {
             console.error('WebSocket error:', error);
-            alert('WebSocket error. Please try again.');
+            showNotification({
+                title: 'WebSocket Error',
+                message: 'WebSocket error. Please try again.',
+                color: 'red',
+            });
         };
     };
 
@@ -254,6 +315,7 @@ function Checkout() {
             if (response.data.success) {
                 const invoiceId = response.data.data.receipt._id;
 
+                console.log(invoiceId)
                 // Pay receipt
                 const payResponse = await axios.post('https://globus-nukus.uz/api/receipts/receipts_pay', {
                     invoice_id: invoiceId,
@@ -262,6 +324,7 @@ function Checkout() {
 
                 if (payResponse.data.success) {
                     alert('Your order is confirmed successfully!');
+                    console.log(payResponse)
                     setReceiptModalOpen(false);
                 }
             }
@@ -280,18 +343,18 @@ function Checkout() {
                         <div className="Checkout-block-info-navi">
                             <TextInput label="Surname" withAsterisk placeholder='Surname...' value={surname} onChange={(e) => setSurName(e.currentTarget.value)} />
                             <TextInput label="First Name" withAsterisk placeholder='First Name...' value={firstName} onChange={(e) => setFirstName(e.currentTarget.value)} />
-                            <TextInput label="Phone Number" withAsterisk placeholder='Phone Number...' value={phoneNumber} onChange={(e) => setPhoneNumber(e.currentTarget.value)} />
+                            <TextInput label="Phone Number" withAsterisk placeholder='998901112233.' value={phoneNumber} onChange={(e) => setPhoneNumber(e.currentTarget.value)} />
                         </div>
                     </div>
                     <div className="Checkout-block-place">
                         <h3>Method of obtaining</h3>
                         <div className="Checkout-block-place-type">
                             <div className='type-pick-up'>
-                                <input type="radio" id='pickUp' name='place' onClick={() => setPlace('pick-up')} />
+                                <input type="radio" id='pickUp' name='place' checked={place === 'pick-up'} onClick={() => setPlace('pick-up')} />
                                 <h4>Pick-up point of Globus Nukus №1</h4>
                             </div>
                             <div className="type-delivery">
-                                <input type="radio" id='delivery' name='place' onClick={() => setPlace('delivery')} disabled={total < min_price} />
+                                <input type="radio" id='delivery' name='place' checked={place === 'delivery'} onClick={() => setPlace('delivery')} disabled={total < min_price} />
                                 <div> <h4>Delivery method</h4>
                                     <p>Minimum sum must be {min_price?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} so'm</p></div>
                             </div>
@@ -355,8 +418,8 @@ function Checkout() {
                     </div>
                 </div>
             </div >
-            <Modal opened={cardModalOpen} onClose={() => setCardModalOpen(false)} title="Add Card">
-                <TextInput label="Card Number" value={cardNumber} onChange={handleChangeCardNumber} />
+            <Modal opened={cardModalOpen} onClose={() => setCardModalOpen(false)} title="Add Card" id='cardModal'>
+                <TextInput label="Card Number" value={cardNumber} onChange={handleChangeCardNumber} id='cardNumber' />
                 <TextInput label="Expiry Date" value={cardExpire} onChange={handleChangeExpire} />
                 <Group position="right">
                     <Button onClick={handleAddCard}>Add Card</Button>
@@ -364,7 +427,7 @@ function Checkout() {
             </Modal>
 
             {/* Verification Modal */}
-            <Modal opened={verifyModalOpen} onClose={() => setVerifyModalOpen(false)} title="Verify Card">
+            <Modal opened={verifyModalOpen} onClose={() => setVerifyModalOpen(false)} title="Verify Card" id='VerifyCard'>
                 <TextInput label="Verification Code" value={verifyCode} onChange={(e) => setVerifyCode(e.currentTarget.value)} />
                 <Group position="right">
                     <Button onClick={handleVerifyCard}>Verify</Button>
@@ -372,7 +435,7 @@ function Checkout() {
             </Modal>
 
             {/* Receipt Modal */}
-            <Modal opened={receiptModalOpen} onClose={() => setReceiptModalOpen(false)} title="Receipt">
+            <Modal opened={receiptModalOpen} onClose={() => setReceiptModalOpen(false)} title="Receipt" id='ReceiptModal'>
                 <Group position="right">
                     <Button onClick={handleCreateReceipt}>Create Receipt</Button>
                 </Group>

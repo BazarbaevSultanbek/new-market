@@ -17,8 +17,8 @@ function Profile() {
     const dispatch = useDispatch();
     const categories = useSelector(state => state?.shop.categories);
     const currentUser = useSelector(state => state?.shop.currentUser);
-
-
+    const [userModule, SetUserModule] = useState(false)
+    const [showButtons, setShowButtons] = useState(false);
     const [module_status, setStatus] = useState()
     const [validation_status, setValidation] = useState(false)
     const [countdown, setCountdown] = useState(0);
@@ -175,6 +175,66 @@ function Profile() {
     /// RESEND CODE FUNCTION FINISHED
 
 
+
+
+
+    useEffect(() => {
+        if (currentUser?.user) {
+            setFirstName(currentUser?.user?.first_name)
+            setLastName(currentUser?.user?.last_name)
+            setPhone_number(currentUser?.user?.phone)
+            setDate(currentUser?.user?.date_of_birth ? dayjs(currentUser?.user?.date_of_birth, 'YYYY-MM-DD').toDate() : null)
+            setGender(currentUser?.user?.gender)
+        }
+    }, [currentUser])
+
+
+    const handleSave = async () => {
+        try {
+            const response = await axios.put(
+                `https://globus-nukus.uz/api/users/${userId}`,
+                {
+                    last_name: surname,
+                    first_name: first_name,
+                    date_of_birth: date_of_birth ? dayjs(date_of_birth).format('YYYY-MM-DD') : null,
+                    gender: gender,
+                    phone: phone_number
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${Cookies.get('token')}`
+                    }
+                }
+            );
+            if (response.status === 200) {
+                console.log('Data saved successfully');
+                setShowButtons(false);
+            }
+        } catch (error) {
+            console.error('Error saving data', error);
+        }
+    };
+
+
+    const handleSignOut = () => {
+        Cookies.remove('token');
+        // Clear current user data here
+        window.location.href = '/';
+    };
+    const handleCancel = () => {
+        setSurName(currentUser?.user?.last_name);
+        setFirstName(currentUser?.user?.first_name);
+        setDate(currentUser?.user?.date_of_birth);
+        setGender(currentUser?.user?.gender);
+        setPhoneNumber(currentUser?.user?.phone);
+        setShowButtons(false);
+    };
+
+
+    const handleInputChange = () => {
+        setShowButtons(true);
+    };
+
     return (
         <div className='Profile'>
             <div className="container">
@@ -195,62 +255,87 @@ function Profile() {
                                         : <Button fullWidth mt="xl" variant="outline" id='resend' color="rgba(33, 107, 255, 1)" onClick={handleResendCode}>Resend code</Button>}
                             </div>
                         </div>
-                        :
 
-                        <div className='Module-inner-regist'>
-                            <Text style={{ textAlign: 'center' }} id='title'>Registration</Text>
-                            <TextInput
-                                label="First Name"
-                                placeholder="First Name..."
-                                withAsterisk
-                                onChange={(e) => setFirstName(e.currentTarget.value)}
-                            />
-                            <TextInput
-                                label="Last Name"
-                                placeholder="Last Name..."
-                                withAsterisk
-                                onChange={(e) => setLastName(e.currentTarget.value)}
-                            />
-                            <TextInput
-                                label="Password"
-                                placeholder="Password"
-                                withAsterisk
-                                onChange={(e) => setPass_word(e.currentTarget.value)}
-                            />
-                            <TextInput
-                                label="Phone Number"
-                                placeholder="998 99 999 99 99"
-                                withAsterisk
-                                onChange={(e) => setPhone_number(e.currentTarget.value)}
-                            />
-                            <DatePickerInput
-                                leftSection={icon}
-                                leftSectionPointerEvents="none"
-                                label="Date of Birth"
-                                placeholder="Date of Birth"
-                                value={date_of_birth}
-                                valueFormat="YYYY MMM DD"
-                                onChange={setDate}
-                                withAsterisk
-                            />
-                            <Radio.Group
-                                name="Gender"
-                                label="Gender"
-                                withAsterisk
-                            >
-                                <Group mt="xs">
-                                    <Radio value="male" label="Male" onChange={() => setGender('male')} />
-                                    <Radio value="female" label="Female" onChange={() => setGender('female')} />
+                        : userModule ? <div className='Module-user'>
+                            <Text style={{ textAlign: 'center' }} id='title'>User Information</Text>
+                            <div>
+                                <TextInput label="First Name" placeholder="First Name..." withAsterisk defaultValue={first_name} onChange={(e) => { setFirstName(e.currentTarget.value); handleInputChange(); }} />
+                                <TextInput label="Last Name" placeholder="Last Name..." withAsterisk defaultValue={last_name} onChange={(e) => { setLastName(e.currentTarget.value); handleInputChange(); }} />
+                                <TextInput label="Phone Number" placeholder="998 99 999 99 99" withAsterisk defaultValue={phone_number} onChange={(e) => { setPhoneNumber(e.currentTarget.value); handleInputChange(); }} />
+                                <DatePickerInput leftSection={icon} onChange={(value) => { setDate(value); handleInputChange(); }} leftSectionPointerEvents="none" label="Date of Birth" placeholder="Date of Birth" valueFormat="YYYY MMM DD" withAsterisk value={date_of_birth} />
+                                <Radio.Group name="Gender" label="Gender" withAsterisk defaultValue={gender}>
+                                    <Group mt="xs">
+                                        <Radio value="male" label="Male" checked={gender === 'male'} onChange={() => { setGender('male'); handleInputChange() }} />
+                                        <Radio value="female" label="Female" checked={gender === 'female'} onChange={() => { setGender('female'); handleInputChange() }} />
+                                    </Group>
+                                </Radio.Group>
+                                <Group id='user-btn'>
+                                    {
+                                        showButtons &&
+                                        <>
+                                            <button style={{ background: 'none', border: 'none', color: 'black', fontWeight: '600' }} onClick={handleCancel}>Cancel</button>
+                                            <Button color='#7f4dff' onClick={handleSave}>Save</Button>
+                                        </>
+                                    }
                                 </Group>
-                            </Radio.Group>
-                            <Button
-                                type='submit'
-                                id='SubmitUp'
-                                color='rgb(21 21 149 / 78%)'
-                                onClick={() => fetchRegistration()}>
-                                Sign Up
-                            </Button>
+                            </div>
                         </div>
+                            :
+
+                            <div className='Module-inner-regist'>
+                                <Text style={{ textAlign: 'center' }} id='title'>Registration</Text>
+                                <TextInput
+                                    label="First Name"
+                                    placeholder="First Name..."
+                                    withAsterisk
+                                    onChange={(e) => setFirstName(e.currentTarget.value)}
+                                />
+                                <TextInput
+                                    label="Last Name"
+                                    placeholder="Last Name..."
+                                    withAsterisk
+                                    onChange={(e) => setLastName(e.currentTarget.value)}
+                                />
+                                <TextInput
+                                    label="Password"
+                                    placeholder="Password"
+                                    withAsterisk
+                                    onChange={(e) => setPass_word(e.currentTarget.value)}
+                                />
+                                <TextInput
+                                    label="Phone Number"
+                                    placeholder="998 99 999 99 99"
+                                    withAsterisk
+                                    onChange={(e) => setPhone_number(e.currentTarget.value)}
+                                />
+                                <DatePickerInput
+                                    leftSection={icon}
+                                    leftSectionPointerEvents="none"
+                                    label="Date of Birth"
+                                    placeholder="Date of Birth"
+                                    value={date_of_birth}
+                                    valueFormat="YYYY MMM DD"
+                                    onChange={setDate}
+                                    withAsterisk
+                                />
+                                <Radio.Group
+                                    name="Gender"
+                                    label="Gender"
+                                    withAsterisk
+                                >
+                                    <Group mt="xs">
+                                        <Radio value="male" label="Male" onChange={() => setGender('male')} />
+                                        <Radio value="female" label="Female" onChange={() => setGender('female')} />
+                                    </Group>
+                                </Radio.Group>
+                                <Button
+                                    type='submit'
+                                    id='SubmitUp'
+                                    color='rgb(21 21 149 / 78%)'
+                                    onClick={() => fetchRegistration()}>
+                                    Sign Up
+                                </Button>
+                            </div>
                     }
                 </Modal>
                 <div className="Profile-list">
@@ -260,7 +345,7 @@ function Profile() {
                                 (<div><Link onClick={() => { setStatus(true), open() }}>Login</Link> <span>/</span> <Link onClick={() => { setStatus(false), open() }}>Registration</Link></div>)
                                 :
                                 <div style={{ display: "flex", alignItems: 'center', justifyContent: "end", gap: "10px" }}>
-                                    <Link to={'/profile'}>
+                                    <Link to={'/profile'} onClick={() => { SetUserModule(true), open() }}>
                                         <i className='fa-regular fa-user'></i>
                                         <span>{currentUser?.user?.first_name}</span>
                                     </Link>
@@ -269,6 +354,7 @@ function Profile() {
                         }
                     </div>
                     <div className="Profile-block">
+
                         <div className='Profile-block-orders'>
                             <Link>
                                 <svg data-v-cd61c950="" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui-icon ">
@@ -291,6 +377,12 @@ function Profile() {
                                 </svg>
                                 <span> App Globus-Nukus</span>
                             </a>
+                        </div>
+                        <div className="Profile-block-signOut">
+                            <p onClick={handleSignOut}>
+                                <i className="fa-solid fa-arrow-right-from-bracket"></i>
+                                <span>Sign out</span>
+                            </p>
                         </div>
                     </div>
                 </div>

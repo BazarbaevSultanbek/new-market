@@ -30,6 +30,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
 
     //// catalog navi hooks
     const categories = useSelector(state => state?.shop?.categories)
+    const InOrder_categories = [...categories]?.sort((a, b) => a.name.localeCompare(b.name));
     const [category_Products, setCategory_products] = useState()
     //// catalog navi hooks are finished
 
@@ -222,7 +223,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
             <div className='Category-page'>
                 <div className="Category-block">
                     <div className="Category-block-menu">
-                        {categories.map((item, index) => (
+                        {InOrder_categories.map((item, index) => (
                             <li key={index} onClick={() => setCatalog(item.id)}>{item.name}</li>
                         ))}
                     </div>

@@ -45,6 +45,32 @@
 
 
 
+.Module-user {
+    overflow: scroll;
+
+    div {
+        line-height: 35px;
+    }
+
+    .mantine-Radio-body {
+        display: flex;
+        align-items: center;
+    }
+
+    #user-btn {
+        margin: 20px 0 10px 0;
+        display: flex;
+        justify-content: space-around;
+
+        button:nth-child(1) {
+            border: none;
+            background: none;
+        }
+    }
+}
+
+
+
 
 
 .Profile {
@@ -80,6 +106,7 @@
 
 .Profile-block-orders,
 .Profile-block-location,
+.Profile-block-signOut,
 .Profile-block-app {
 
     a,
@@ -107,6 +134,12 @@
     }
 }
 
-.Profile-block-location {
+.Profile-block-location,
+.Profile-block-signOut {
     justify-content: center;
+    margin-left: 5px;
+
+    p {
+        gap: 5px !important;
+    }
 }
