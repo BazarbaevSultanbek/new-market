@@ -114,7 +114,7 @@ function Checkout() {
                             color: 'green',
                         });
                         setReceiptModalOpen(true);
-                        navigate('/')
+                       
                     } else {
                         console.log(response);
                         showNotification({
@@ -326,6 +326,7 @@ function Checkout() {
                     alert('Your order is confirmed successfully!');
                     console.log(payResponse)
                     setReceiptModalOpen(false);
+                     navigate('/')    
                 }
             }
         } catch (error) {
