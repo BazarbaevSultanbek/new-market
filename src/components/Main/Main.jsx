@@ -190,8 +190,6 @@ function Main() {
     };
     /// RESEND CODE FUNCTION FINISHED
 
-
-
     return (
         <div className='Main'>
             <div className="Main-top">
@@ -241,7 +239,7 @@ function Main() {
                 <div className="Main-categories">
                     <ul className="categories-grid">
                         {InOrder_categories.map((item, index) => (
-                            <li key={index} onClick={() => { setCatalog(item?.id), setCatalogStatus(!catalog_status) }}>
+                            <li key={index} onClick={() => { setCatalog(item?.id), setCatalogStatus(!catalog_status), setPage('main') }}>
                                 {item.name}
                             </li>
                         ))}

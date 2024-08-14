@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Group, Radio, rem, TextInput } from '@mantine/core';
+import { Button, Group, Modal, Radio, rem, Text, TextInput } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { IconCalendar } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
@@ -7,6 +7,7 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 import '@mantine/dates/styles.css';
 import dayjs from 'dayjs';
+import { useDisclosure } from '@mantine/hooks';
 
 function Main_profile() {
     const currentUser = useSelector(state => state?.shop.currentUser);
@@ -15,7 +16,7 @@ function Main_profile() {
     const [dataPage, setDataPage] = useState('orders');
     const [showButtons, setShowButtons] = useState(false);
     const [orders, setOrders] = useState([]);
-    const [socket, setSocket] = useState(null);
+    const [opened, { open, close }] = useDisclosure(false);
     const icon = <IconCalendar style={{ width: rem(18), height: rem(18) }} stroke={1.5} />;
 
     // User profile state
@@ -57,9 +58,7 @@ function Main_profile() {
 
 
             ws.onclose = (event) => {
-                console.log('WebSocket connection closed', event);
                 if (!event.wasClean) {
-                    console.error('WebSocket connection closed with code:', event.code);
                     // Retry after a delay
                     setTimeout(connectWebSocket, 3000);
                 }
@@ -74,6 +73,19 @@ function Main_profile() {
             }
         };
     }, []);
+
+
+    const [orderSearchValue, setOrderSearch] = useState('')
+    const [SearchedOrder, setSearchedOrder] = useState()
+    useEffect(() => {
+        if (orderSearchValue.length > 0) {
+            const order = orders?.filter((order) => order.order_number.startsWith(orderSearchValue))
+            setSearchedOrder(order)
+        } else {
+            setSearchedOrder("")
+        }
+
+    }, [orderSearchValue])
 
 
 
@@ -122,45 +134,366 @@ function Main_profile() {
         window.location.href = '/';
     };
 
+
+
+    const [showProduct, setShowProduct] = useState([]);
+
+    useEffect(() => {
+        if (orders) {
+            const newShowProduct = orders.map((order, index) => ({
+                id: index,
+                status: false,
+            }));
+
+            setShowProduct(newShowProduct);
+        }
+    }, [orders]);
+
+    const OrderProducts = (id) => {
+        const updatedShowProduct = showProduct.map(product =>
+            product.id === id ? { ...product, status: !product.status } : product
+        );
+        setShowProduct(updatedShowProduct);
+    }
+
+    useEffect(() => {
+        if (orders.length > 0) {
+            const newShowProduct = orders.map((order, index) => ({
+                id: index,
+                status: false,
+            }));
+
+            setShowProduct(newShowProduct);
+        }
+    }, [orders]);
+
+
+
+
+
+    //// VALIDATION TIME FUNCTION
+    const [countdown, setCountdown] = useState(0);
+    const [resend_status, setResend_status] = useState(false)
+
+    useEffect(() => {
+        let interval;
+        if (countdown > 0) {
+            setResend_status(false)
+            interval = setInterval(() => {
+                setCountdown((prevCountdown) => prevCountdown - 1);
+            }, 1000);
+        } else if (countdown === 0) {
+            setResend_status(true);
+        }
+        return () => clearInterval(interval);
+    }, [countdown]);
+
+    ////VALIDATION TIME FUNCTION FINISHED
+
+
+    ///// CHANGE PASSWORD ITEMS
+    const [changePass, setChangePass] = useState(false)
+    const [validation_password, setValidation_Password] = useState(false)
+    const [phone, setPhone] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [conf_Password, set_conf_Password] = useState('')
+    const [verification_code, setVerify_Code] = useState()
+
+    const CancelPasswordModule = () => {
+        setPhone('')
+        setNewPassword('')
+        set_conf_Password('')
+        setChangePass(false)
+        close()
+    }
+
+    const NewPasswordSave = async () => {
+        if (conf_Password === newPassword) {
+            try {
+                const requestPass = await axios.post('https://globus-nukus.uz/api/users/password-change', {
+                    phone: phone,
+                    password: newPassword,
+                    password2: conf_Password,
+                })
+                setChangePass(false)
+                setValidation_Password(true)
+            } catch (error) {
+                showNotification({
+                    title: 'Error',
+                    message: error?.response?.data?.message || 'Error with changing the password',
+                    color: 'red'
+                });
+                console.log(error);
+            }
+        }
+    }
+
+
+    const ValidationPassword = async () => {
+        try {
+            const fetchValidation = axios.post('https://globus-nukus.uz/api/users/password-change/verify', {
+                phone: phone,
+                otp: verification_code,
+            })
+            showNotification({
+                title: 'New Password',
+                message: 'Password is successfully changed',
+                color: 'green'
+            });
+        } catch (error) {
+            showNotification({
+                title: 'Error',
+                message: error?.response?.data?.message || 'Error with changing the password',
+                color: 'red'
+            });
+            console.log(error);
+        }
+    }
+
+
+    const ResendVerify = async () => {
+        try {
+            const requestPass = await axios.post('https://globus-nukus.uz/api/users/password-change', {
+                phone: phone,
+                password: newPassword,
+                password2: conf_Password,
+            })
+        } catch (error) {
+            showNotification({
+                title: 'Error',
+                message: error?.response?.data?.message || 'Error with changing the password',
+                color: 'red'
+            });
+            console.log(error);
+        }
+    }
+
+    /////// CHANGE PASSWORD ITEMS HAS FINISHED
+
+
     return (
         <div className='Info'>
             <div className="container">
+                <Modal opened={opened} onClose={close} title="Change My Password">
+                    {changePass ?
+                        <div className='Module-password'>
+                            <Text style={{ textAlign: 'center' }} id='title'>Change Password</Text>
+                            <div className='Module-password-navi'>
+                                <TextInput label="Phone Number" disabled placeholder="998904352312" defaultValue={currentUser?.user?.phone} withAsterisk onChange={(e) => { setPhone(e.currentTarget.value); }} />
+                                <TextInput label="New Password" placeholder="New Password..." withAsterisk onChange={(e) => { setNewPassword(e.currentTarget.value); handleInputChange(); }} />
+                                <TextInput label="Confirm New Password" placeholder="Confirm Password..." withAsterisk onChange={(e) => { set_conf_Password(e.currentTarget.value); handleInputChange(); }} />
+                                <div className="Module-navi-btn">
+                                    <button style={{ background: 'none', border: 'none', color: 'black', fontWeight: '600' }} onClick={CancelPasswordModule}>Cancel</button>
+                                    <Button color='#7f4dff' onClick={NewPasswordSave}>Save</Button>
+                                </div>
+                            </div>
+                        </div>
+                        : validation_password ?
+                            <div className='Module-verify-password'>
+                                <Text style={{ textAlign: 'center' }} id='title'>Validation</Text>
+                                <TextInput placeholder="Verification code" id='codeInput' onChange={(e) => setVerify_Code(e.currentTarget.value)} />
+                                <div className='Module-validation-btn'>
+                                    < Button type='submit' id="CodeSubmit" onClick={ValidationPassword}>Submit</Button>
+                                    {
+                                        !resend_status ? <Button fullWidth mt="xl" variant="outline" color="rgba(33, 107, 255, 1)" id='resend' disabled>{`Resend code after 00:${countdown}`}</Button>
+                                            : <Button fullWidth mt="xl" variant="outline" id='resend' color="rgba(33, 107, 255, 1)" onClick={ResendVerify}>Resend code</Button>}
+                                </div>
+                            </div>
+                            : ""}
+                </Modal>
                 <div className="Info-block">
                     <div className="Info-block-menu">
                         <ul>
                             <li onClick={() => setDataPage('orders')}>My orders</li>
                             <li onClick={() => setDataPage('personal')}>My Information</li>
+                            <li onClick={() => { open(), setChangePass(true) }}>Change My Password</li>
                         </ul>
                     </div>
                     <div className="Info-block-data">
                         {
                             dataPage === 'orders' ?
-                                <div className='Info-block-data-orders'>
-                                    {orders.length > 0 ? (
-                                        <ul className='Info-block-data-ul'>
-                                            {orders.map(order => (
-                                                <li key={order.id} className="Info-block-data-order">
-                                                    <h3>Order Number: {order.order_number}</h3>
-                                                    <p id="status">Status: <span>{order.status}</span></p>
-                                                    <p>Amount: {order.amount} so'm</p>
-                                                    <p>Delivery Type: {order.delivery_type === 1 ? "Pickup" : "Delivery"}</p>
-                                                    <p>Payment Type: {order.payment_type === 1 ? "Online" : "Cash on Delivery"}</p>
-                                                    <p>Receiver: {order.receiver.first_name} {order.receiver.last_name}</p>
-                                                    <p>Products:</p>
-                                                    <ul>
-                                                        {order.items.map(item => (
-                                                            <li key={item.product} className='Info-data-order-product'>
-                                                                {item.product_name} - {item.quantity} x {item.price}
-                                                            </li>
-                                                        ))}
-                                                    </ul>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <p>Nothing is here 😑!</p>
-                                    )}
-                                </div>
+                                <>
+                                    {
+                                        orders.length > 0 ?
+                                            <div className='Info-block-data-search'>
+                                                <label htmlFor="orderSearch">
+                                                    <i className="fa-solid fa-magnifying-glass"></i>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    id="orderSearch"
+                                                    className='Info-data-search-input'
+                                                    placeholder='Поиск заказов по номерам'
+                                                    onChange={(e) => setOrderSearch(e.currentTarget.value)}
+                                                />
+
+                                            </div> : ""
+                                    }
+
+                                    {orders?.length > 0 && orderSearchValue.length <= 0 ? (
+                                        <div
+                                            className='Info-block-data-orders'
+                                            style={{ border: orders?.length <= 0 ? ' ' : '1px solid rgb(209, 209, 209)' }}
+                                        >
+                                            <table>
+                                                <thead>
+                                                    <tr className='Info-data-orders-main'>
+                                                        <th>Номер заказа</th>
+                                                        <th>Статус</th>
+                                                        <th>Сумма</th>
+                                                        <th>Тип доставки</th>
+                                                        <th>Тип оплаты</th>
+                                                        <th>Получатель</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {orders?.map((order, index) => (
+                                                        <>
+                                                            <tr className='Info-block-data-tr' key={index}>
+                                                                <td>{order.order_number}</td>
+                                                                <td>
+                                                                    <span
+                                                                        style={{
+                                                                            color: order.status === "Ожидает подтверждения"
+                                                                                ? 'rgba(231, 255, 14, 0.835)'
+                                                                                : order.status === 'Отменен'
+                                                                                    ? 'rgba(251, 15, 15, 0.881)'
+                                                                                    : 'rgba(4, 255, 4, 0.296)'
+                                                                        }}>
+                                                                        {order.status}
+                                                                    </span>
+                                                                </td>
+                                                                <td>{order.amount} сум</td>
+                                                                <td>{order.delivery_type === 1 ? "Подобрать" : "Доставка"}</td>
+                                                                <td>{order.payment_type === 1 ? "Онлайн" : "Наличные"}</td>
+                                                                <td>{order.receiver.first_name}</td>
+                                                                <td>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        id={`order-${index}`}
+                                                                        checked={showProduct[index]?.status}
+                                                                        style={{ display: 'none' }}
+                                                                        onChange={() => OrderProducts(index)}
+                                                                    />
+                                                                    <label htmlFor={`order-${index}`}>
+                                                                        <i
+                                                                            className="fa-solid fa-chevron-right"
+                                                                            style={{
+                                                                                transform: showProduct[index]?.status ? 'rotate(90deg)' : 'rotate(0deg)',
+                                                                                transition: "0.2s all linear"
+                                                                            }}
+                                                                        ></i>
+                                                                    </label>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr className='Info-block-orders-products'>
+                                                                <td colSpan="7" style={{ padding: 0 }}>
+                                                                    <div className={`Info-block-orders-products-inner ${showProduct[index]?.status ? 'open' : ''}`}>
+                                                                        <ul className='Info-products-inner-ul'>
+                                                                            {
+                                                                                order.items?.map((product) => (
+                                                                                    <li key={product?.id}>
+                                                                                        <h4>Имя: {product?.product_name}</h4>
+                                                                                        <p>Количество: {product?.quantity} шт.</p>
+                                                                                        <p>Цена продукта: {product?.price} сум</p>
+                                                                                        <p>Общая стоимость: {product?.total_price} сум</p>
+                                                                                    </li>
+                                                                                ))
+                                                                            }
+                                                                        </ul>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : SearchedOrder?.length > 0 && orders?.length > 0 ?
+                                        <div className="Info-block-data-result" style={{ border: SearchedOrder?.length <= 0 ? ' ' : '1px solid rgb(209, 209, 209)' }}>
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Номер заказа</th>
+                                                        <th>Статус</th>
+                                                        <th>Сумма</th>
+                                                        <th>Тип доставки</th>
+                                                        <th>Тип оплаты</th>
+                                                        <th>Получатель</th>
+
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {
+                                                        SearchedOrder?.map((order, index) => (
+                                                            <>
+                                                                <tr className={`Info-block-data-tr ${showProduct[index]?.status ? 'open' : ''}`} key={order.id}>
+                                                                    <td>{order.order_number}</td>
+                                                                    <td>
+                                                                        <span
+                                                                            style={{
+                                                                                color: order.status === "Ожидает подтверждения" ?
+                                                                                    'rgba(231, 255, 14, 0.835)' :
+                                                                                    'Отменен' ? 'rgba(251, 15, 15, 0.881)'
+                                                                                        : ' rgba(4, 255, 4, 0.296)'
+                                                                            }}>
+                                                                            {order.status}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>{order.amount} сум</td>
+                                                                    <td>{order.delivery_type === 1 ? "Подобрать" : "Доставка"}</td>
+                                                                    <td>{order.payment_type === 1 ? "Онлайн" : "Наличные"}</td>
+                                                                    <td>{order.receiver.first_name}</td>
+                                                                    <td>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            id={`order-${index}`}
+                                                                            checked={showProduct[index]?.status}
+                                                                            style={{ display: 'none' }}
+                                                                            onChange={() => OrderProducts(index)}
+                                                                        />
+                                                                        <label htmlFor={`order-${index}`}>
+                                                                            <i
+                                                                                className="fa-solid fa-chevron-right"
+                                                                                style={{
+                                                                                    transform: showProduct[index]?.status ? 'rotate(90deg)' : 'rotate(0deg)',
+                                                                                    transition: "0.2s all linear"
+                                                                                }}
+                                                                            ></i>
+                                                                        </label>
+                                                                    </td>
+                                                                </tr >
+                                                                <tr className={`Info-block-orders-products`}>
+                                                                    <td colSpan="7" style={{ padding: 0 }}>
+                                                                        <div className="Info-block-orders-products-inner">
+                                                                            <ul className='Info-products-inner-ul'>
+                                                                                {
+                                                                                    order.items?.map((product) => (
+                                                                                        <li key={product?.id}>
+                                                                                            <h4>Имя: {product?.product_name}</h4>
+                                                                                            <p>Количество: {product?.quantity} шт.</p>
+                                                                                            <p>Цена продукта: {product?.price} сум</p>
+                                                                                            <p>Общая стоимость: {product?.total_price} сум</p>
+                                                                                        </li>
+                                                                                    ))
+                                                                                }
+                                                                            </ul>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            </>
+                                                        ))
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        : (
+                                            <p style={{ textAlign: 'center' }}>Nothing is here 😑!</p>
+                                        )}
+
+                                </>
                                 :
                                 <div className="Info-block-data-navi">
                                     <div className="Info-data-navi-inner">
@@ -205,8 +538,8 @@ function Main_profile() {
                         }
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 

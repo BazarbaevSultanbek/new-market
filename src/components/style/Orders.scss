@@ -1,0 +1,122 @@
+.Orders-top {
+    display: flex;
+    justify-content: center;
+    position: relative;
+    padding: 10px 0;
+}
+
+.Replaced {
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.Orders-top-back {
+    position: absolute;
+    left: 15px;
+}
+
+.Orders-top-logo {
+    h4 {
+        text-align: center;
+        font-family: 'Roboto', sans-serif;
+    }
+}
+
+.Orders-block-ul {
+    padding: 0 5px;
+
+}
+
+.Orders-block-ul-li {
+    margin: 10px 0;
+    list-style: none;
+}
+
+
+.Orders-ul-li-title {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    span {
+        background: rgba(14, 197, 14, 0.818);
+        border-radius: 15px;
+        color: white;
+        padding: 2px 0px 2px 7px;
+        width: 200px;
+    }
+
+
+}
+
+
+.Orders-status {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+
+    .Orders-ul-li-navi {
+        display: flex;
+
+        input {
+            display: none;
+        }
+
+        label {
+            i {
+                transition: 0.5s all linear;
+            }
+        }
+    }
+}
+
+.Orders-ul-li-info {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out;
+    padding: 0;
+}
+
+.Orders-block-ul-li.open .Orders-ul-li-info {
+    max-height: 1000px;
+    padding: 10px 0;
+}
+
+.Orders-ul-li-info {
+    overflow: scroll;
+    transition: 0.2s all linear;
+}
+
+.Orders-info-date-created,
+.Orders-info-date-status,
+.Orders-info-products-name,
+.Orders-info-products-quantity,
+.Orders-info-products-price,
+.Orders-info-prices-gotten,
+.Orders-info-prices-used,
+.Orders-info-prices-cashback,
+.Orders-info-prices-total {
+    display: flex;
+    padding: 5px;
+    font-weight: 300;
+    justify-content: space-between;
+}
+
+.Orders-li-info-products {
+    background-color: rgba(14, 197, 14, 0.818);
+    color: white;
+    border-radius: 15px;
+    margin-top: 10px;
+    padding: 10px 5px;
+}
+
+.Orders-info-products-name {
+    p:nth-child(2) {
+        width: 110px;
+    }
+}

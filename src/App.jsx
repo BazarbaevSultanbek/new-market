@@ -12,6 +12,7 @@ import Checkout from './components/Checkout/Checkout';
 import Profile from './components/Profile/Profile';
 import Catalog from './components/Catalog/Catalog';
 import Product from './components/Product/Product';
+import Orders from './components/Orders/Orders';
 import '@mantine/notifications/styles.css';
 import { Notifications } from '@mantine/notifications';
 import { CssLoader } from './CssLoader';
@@ -40,6 +41,7 @@ function App() {
               <Route path='catalog' element={<Catalog />} />
               <Route path="checkout" element={<Checkout />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="orders" element={<Orders />} />
               <Route path='/product' element={<Product />} />
             </Route>
           </Routes>

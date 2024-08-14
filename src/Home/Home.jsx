@@ -10,6 +10,7 @@ import Main from '../components/Main/Main';
 import Catalog from './../components/Catalog/Catalog';
 import Profile from './../components/Profile/Profile';
 import { Loader } from '@mantine/core';
+import Orders from '../components/Orders/Orders';
 
 function Home() {
     const dispatch = useDispatch();
@@ -29,6 +30,33 @@ function Home() {
             window.removeEventListener('resize', handleResize);
         };
     }, [page]);
+
+    console.log(page)
+
+
+    useEffect(() => {
+        switch (location?.pathname) {
+            case '/profile':
+                setPage('profile');
+                break;
+            case '/orders':
+                setPage('orders');
+                break;
+            case '/catalog':
+                setPage('catalog');
+                break;
+            case '/cart':
+                setPage('cart');
+                break;
+            case '/saved':
+                setPage('saved');
+                break;
+            default:
+                setPage('main');
+                break;
+        }
+
+    }, [])
 
 
     const [loading, setLoading] = useState(true);
@@ -78,27 +106,6 @@ function Home() {
             </div>
         );
     }
-    // useEffect(() => {
-    //     const fetchRequest = async () => {
-    //         try {
-    //             const itemsResponse = await axios.get('https://globus-nukus.uz/api/products');
-    //             const catalogResponse = await axios.get('https://globus-nukus.uz/api/categories');
-
-    //             dispatch(setUpStates({
-    //                 products: itemsResponse.data.data.items,
-    //                 categories: catalogResponse.data.data.categories
-    //             }));
-    //         } catch (error) {
-    //             notifications.show({
-    //                 title: 'Error',
-    //                 message: error?.response?.data?.message || 'An error occurred',
-    //             });
-    //             console.log(error);
-    //         }
-    //     };
-
-    //     fetchRequest();
-    // }, [dispatch]);
 
     const getActiveClass = (path) => location.pathname === path ? 'active' : '';
 
@@ -154,7 +161,9 @@ function Home() {
                                 case 'catalog':
                                     return <Catalog />;
                                 case 'profile':
-                                    return <Profile />;
+                                    return <Profile setPage={setPage} />;
+                                case 'orders':
+                                    return <Orders setPage={setPage} />
                                 default:
                                     return '';
                             }

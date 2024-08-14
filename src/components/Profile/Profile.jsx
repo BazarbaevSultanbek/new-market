@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import axios from 'axios'
 import Cookies from 'js-cookie';
@@ -13,16 +13,16 @@ import '../style/Profile.scss'
 import { fetchUserProfile, loadUserDataFromCookies } from '../../store/Reducers/Reducer';
 import dayjs from 'dayjs';
 
-function Profile() {
+function Profile({ setPage }) {
     const dispatch = useDispatch();
-    const categories = useSelector(state => state?.shop.categories);
     const currentUser = useSelector(state => state?.shop.currentUser);
     const [userModule, SetUserModule] = useState(false)
-    const [showButtons, setShowButtons] = useState(false);
     const [module_status, setStatus] = useState()
     const [validation_status, setValidation] = useState(false)
     const [countdown, setCountdown] = useState(0);
 
+
+    const navigate = useNavigate()
 
     //// Login
     const [opened, { open, close }] = useDisclosure(false);
@@ -68,6 +68,9 @@ function Profile() {
     };
 
 
+
+
+
     ///// Registration
 
     const [first_name, setFirstName] = useState()
@@ -102,6 +105,14 @@ function Profile() {
         }
     };
 
+    const fetchRegistCancel = () => {
+        setFirstName('')
+        setLastName('')
+        setPass_word('')
+        setPhone_number('')
+        setDate('')
+        setGender('')
+    }
     /////
 
     //// validation
@@ -144,7 +155,6 @@ function Profile() {
             setResend_status(false)
             interval = setInterval(() => {
                 setCountdown((prevCountdown) => prevCountdown - 1);
-                console.log(countdown);
             }, 1000);
         } else if (countdown === 0) {
             setResend_status(true);
@@ -177,6 +187,85 @@ function Profile() {
 
 
 
+    ///// CHANGE PASSWORD ITEMS
+    const [changePass, setChangePass] = useState(false)
+    const [validation_password, setValidation_Password] = useState(false)
+    const [phone, setPhone] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [conf_Password, set_conf_Password] = useState('')
+    const [verification_code, setVerify_Code] = useState()
+
+    const CancelPasswordModule = () => {
+        setPhone('')
+        setNewPassword('')
+        set_conf_Password('')
+        setChangePass(false)
+        close()
+    }
+
+    const NewPasswordSave = async () => {
+        if (conf_Password === newPassword) {
+            try {
+                const requestPass = await axios.post('https://globus-nukus.uz/api/users/password-change', {
+                    phone: phone,
+                    password: newPassword,
+                    password2: conf_Password,
+                })
+                setChangePass(false)
+                setValidation_Password(true)
+            } catch (error) {
+                showNotification({
+                    title: 'Error',
+                    message: error?.response?.data?.message || 'Error with changing the password',
+                    color: 'red'
+                });
+                console.log(error);
+            }
+        }
+    }
+
+
+    const ValidationPassword = async () => {
+        try {
+            const fetchValidation = axios.post('https://globus-nukus.uz/api/users/password-change/verify', {
+                phone: phone,
+                otp: verification_code,
+            })
+            showNotification({
+                title: 'New Password',
+                message: 'Password is successfully changed',
+                color: 'green'
+            });
+        } catch (error) {
+            showNotification({
+                title: 'Error',
+                message: error?.response?.data?.message || 'Error with changing the password',
+                color: 'red'
+            });
+            console.log(error);
+        }
+    }
+
+
+    const ResendVerify = async () => {
+        try {
+            const requestPass = await axios.post('https://globus-nukus.uz/api/users/password-change', {
+                phone: phone,
+                password: newPassword,
+                password2: conf_Password,
+            })
+        } catch (error) {
+            showNotification({
+                title: 'Error',
+                message: error?.response?.data?.message || 'Error with changing the password',
+                color: 'red'
+            });
+            console.log(error);
+        }
+    }
+
+    /////// CHANGE PASSWORD ITEMS HAS FINISHED
+
 
     useEffect(() => {
         if (currentUser?.user) {
@@ -187,6 +276,7 @@ function Profile() {
             setGender(currentUser?.user?.gender)
         }
     }, [currentUser])
+
 
 
     const handleSave = async () => {
@@ -222,28 +312,27 @@ function Profile() {
         window.location.href = '/';
     };
     const handleCancel = () => {
-        setSurName(currentUser?.user?.last_name);
+        setLastName(currentUser?.user?.last_name);
         setFirstName(currentUser?.user?.first_name);
-        setDate(currentUser?.user?.date_of_birth);
+        setDate(currentUser?.user?.date_of_birth ? dayjs(currentUser?.user?.date_of_birth, 'YYYY-MM-DD').toDate() : null);
         setGender(currentUser?.user?.gender);
         setPhoneNumber(currentUser?.user?.phone);
-        setShowButtons(false);
-    };
-
-
-    const handleInputChange = () => {
-        setShowButtons(true);
+        SetUserModule(false)
+        close()
     };
 
     return (
         <div className='Profile'>
             <div className="container">
-                <Modal opened={opened} onClose={close} centered>
+                <Modal opened={opened} onClose={close} withCloseButton={false} centered>
                     {module_status ? <div className='Module-inner'>
                         <Text style={{ textAlign: 'center' }} id='title'>Login</Text>
                         <TextInput label="Phone Number" withAsterisk placeholder="998 99 999 99 99" id='InputNumber' onChange={(e) => setPhoneNumber(e.currentTarget.value)} />
                         <TextInput label="Password" withAsterisk placeholder="Password" id='InputPassword' onChange={(e) => setPassword(e.currentTarget.value)} />
-                        <Button type='submit' id='SubmitIn' onClick={() => fetchLogIn()}>Sign in</Button>
+                        <Group id='user-btn'>
+                            <Button type='submit' id='SubmitIn' onClick={() => { close(), setStatus(false) }}>Cancel</Button>
+                            <Button type='submit' id='SubmitIn' onClick={() => fetchLogIn()}>Sign in</Button>
+                        </Group>
                     </div> : validation_status ?
                         <div className='Module-validation'>
                             <Text style={{ textAlign: 'center' }} id='title'>Validation</Text>
@@ -270,72 +359,99 @@ function Profile() {
                                     </Group>
                                 </Radio.Group>
                                 <Group id='user-btn'>
-                                    {
-                                        showButtons &&
-                                        <>
-                                            <button style={{ background: 'none', border: 'none', color: 'black', fontWeight: '600' }} onClick={handleCancel}>Cancel</button>
-                                            <Button color='#7f4dff' onClick={handleSave}>Save</Button>
-                                        </>
-                                    }
+                                    <>
+                                        <button style={{ background: 'none', border: 'none', color: 'black', fontWeight: '600' }} onClick={handleCancel}>Cancel</button>
+                                        <Button color='#7f4dff' onClick={handleSave}>Save</Button>
+                                    </>
                                 </Group>
                             </div>
                         </div>
-                            :
+                            : changePass ?
+                                <div className='Module-password'>
+                                    <Text style={{ textAlign: 'center' }} id='title'>Change Password</Text>
+                                    <div className='Module-password-navi'>
+                                        <TextInput label="Phone Number" disabled placeholder="998904352312" defaultValue={currentUser?.user?.phone} withAsterisk onChange={(e) => { setPhone(e.currentTarget.value); }} />
+                                        <TextInput label="New Password" placeholder="New Password..." withAsterisk onChange={(e) => { setNewPassword(e.currentTarget.value); handleInputChange(); }} />
+                                        <TextInput label="Confirm New Password" placeholder="Confirm Password..." withAsterisk onChange={(e) => { set_conf_Password(e.currentTarget.value); handleInputChange(); }} />
+                                        <div className="Module-navi-btn">
+                                            <button style={{ background: 'none', border: 'none', color: 'black', fontWeight: '600' }} onClick={CancelPasswordModule}>Cancel</button>
+                                            <Button color='#7f4dff' onClick={NewPasswordSave}>Save</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                                : validation_password ?
+                                    <div className='Module-verify-password'>
+                                        <Text style={{ textAlign: 'center' }} id='title'>Validation</Text>
+                                        <TextInput placeholder="Verification code" id='codeInput' onChange={(e) => setVerify_Code(e.currentTarget.value)} />
+                                        <div className='Module-validation-btn'>
+                                            < Button type='submit' id="CodeSubmit" onClick={ValidationPassword}>Submit</Button>
+                                            {
+                                                !resend_status ? <Button fullWidth mt="xl" variant="outline" color="rgba(33, 107, 255, 1)" id='resend' disabled>{`Resend code after 00:${countdown}`}</Button>
+                                                    : <Button fullWidth mt="xl" variant="outline" id='resend' color="rgba(33, 107, 255, 1)" onClick={ResendVerify}>Resend code</Button>}
+                                        </div>
+                                    </div>
+                                    :
 
-                            <div className='Module-inner-regist'>
-                                <Text style={{ textAlign: 'center' }} id='title'>Registration</Text>
-                                <TextInput
-                                    label="First Name"
-                                    placeholder="First Name..."
-                                    withAsterisk
-                                    onChange={(e) => setFirstName(e.currentTarget.value)}
-                                />
-                                <TextInput
-                                    label="Last Name"
-                                    placeholder="Last Name..."
-                                    withAsterisk
-                                    onChange={(e) => setLastName(e.currentTarget.value)}
-                                />
-                                <TextInput
-                                    label="Password"
-                                    placeholder="Password"
-                                    withAsterisk
-                                    onChange={(e) => setPass_word(e.currentTarget.value)}
-                                />
-                                <TextInput
-                                    label="Phone Number"
-                                    placeholder="998 99 999 99 99"
-                                    withAsterisk
-                                    onChange={(e) => setPhone_number(e.currentTarget.value)}
-                                />
-                                <DatePickerInput
-                                    leftSection={icon}
-                                    leftSectionPointerEvents="none"
-                                    label="Date of Birth"
-                                    placeholder="Date of Birth"
-                                    value={date_of_birth}
-                                    valueFormat="YYYY MMM DD"
-                                    onChange={setDate}
-                                    withAsterisk
-                                />
-                                <Radio.Group
-                                    name="Gender"
-                                    label="Gender"
-                                    withAsterisk
-                                >
-                                    <Group mt="xs">
-                                        <Radio value="male" label="Male" onChange={() => setGender('male')} />
-                                        <Radio value="female" label="Female" onChange={() => setGender('female')} />
-                                    </Group>
-                                </Radio.Group>
-                                <Button
-                                    type='submit'
-                                    id='SubmitUp'
-                                    color='rgb(21 21 149 / 78%)'
-                                    onClick={() => fetchRegistration()}>
-                                    Sign Up
-                                </Button>
-                            </div>
+                                    <div className='Module-inner-regist'>
+                                        <Text style={{ textAlign: 'center' }} id='title'>Registration</Text>
+                                        <TextInput
+                                            label="First Name"
+                                            placeholder="First Name..."
+                                            withAsterisk
+                                            onChange={(e) => setFirstName(e.currentTarget.value)}
+                                        />
+                                        <TextInput
+                                            label="Last Name"
+                                            placeholder="Last Name..."
+                                            withAsterisk
+                                            onChange={(e) => setLastName(e.currentTarget.value)}
+                                        />
+                                        <TextInput
+                                            label="Password"
+                                            placeholder="Password"
+                                            withAsterisk
+                                            onChange={(e) => setPass_word(e.currentTarget.value)}
+                                        />
+                                        <TextInput
+                                            label="Phone Number"
+                                            placeholder="998 99 999 99 99"
+                                            withAsterisk
+                                            onChange={(e) => setPhone_number(e.currentTarget.value)}
+                                        />
+                                        <DatePickerInput
+                                            leftSection={icon}
+                                            leftSectionPointerEvents="none"
+                                            label="Date of Birth"
+                                            placeholder="Date of Birth"
+                                            value={date_of_birth}
+                                            valueFormat="YYYY MMM DD"
+                                            onChange={setDate}
+                                            withAsterisk
+                                        />
+                                        <Radio.Group
+                                            name="Gender"
+                                            label="Gender"
+                                            withAsterisk
+                                        >
+                                            <Group mt="xs">
+                                                <Radio value="male" label="Male" onChange={() => setGender('male')} />
+                                                <Radio value="female" label="Female" onChange={() => setGender('female')} />
+                                            </Group>
+                                        </Radio.Group>
+                                        <div>
+                                            <button
+                                                onClick={() => fetchRegistCancel()}>
+                                                Cancel
+                                            </button>
+                                            <Button
+                                                type='submit'
+                                                id='SubmitUp'
+                                                color='rgb(21 21 149 / 78%)'
+                                                onClick={() => fetchRegistration()}>
+                                                Sign Up
+                                            </Button>
+                                        </div>
+                                    </div>
                     }
                 </Modal>
                 <div className="Profile-list">
@@ -354,9 +470,8 @@ function Profile() {
                         }
                     </div>
                     <div className="Profile-block">
-
                         <div className='Profile-block-orders'>
-                            <Link>
+                            <Link to={'orders'} onClick={() => setPage('orders')}>
                                 <svg data-v-cd61c950="" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="ui-icon ">
                                     <path fillRule="evenodd" clipRule="evenodd" d="M12 2.5C10.2402 2.5 9 3.88779 9 5.5H15C15 3.88779 13.7598 2.5 12 2.5ZM7.5 9.5V7H5.5V12.25C5.5 12.6642 5.16421 13 4.75 13C4.33578 13 4 12.6642 4 12.25V6.25V5.5H4.75H7.5C7.5 3.11221 9.35984 1 12 1C14.6402 1 16.5 3.11221 16.5 5.5H19.25H20V6.25V19.75C20 20.9926 18.9926 22 17.75 22H13.25C12.8358 22 12.5 21.6642 12.5 21.25C12.5 20.8358 12.8358 20.5 13.25 20.5H17.75C18.1642 20.5 18.5 20.1642 18.5 19.75V7H16.5V9.5H15V7H9V9.5H7.5ZM12.2738 16.0323C12.5667 15.7395 12.5667 15.2646 12.2738 14.9717C11.9809 14.6788 11.506 14.6788 11.2131 14.9717L5.99548 20.1893L3.78034 17.9742C3.48744 17.6813 3.01257 17.6813 2.71968 17.9741C2.42678 18.267 2.42677 18.7419 2.71966 19.0348L5.46513 21.7803C5.60579 21.921 5.79655 22 5.99547 22C6.19438 22 6.38515 21.921 6.5258 21.7803L12.2738 16.0323Z" fill="#141415"></path>
                                 </svg>
@@ -368,6 +483,12 @@ function Profile() {
                             <p>
                                 <i className="fa-solid fa-location-dot"></i>
                                 <span>Location: Nukus</span>
+                            </p>
+                        </div>
+                        <div className="Profile-block-password" onClick={() => { setChangePass(true), open() }}>
+                            <p>
+                                <i class="fa-solid fa-lock"></i>
+                                <span>Change the password</span>
                             </p>
                         </div>
                         <div className='Profile-block-app'>

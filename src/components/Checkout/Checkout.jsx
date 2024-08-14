@@ -27,6 +27,7 @@ function Checkout() {
     const [verifyCode, setVerifyCode] = useState('');
     const [receiptModalOpen, setReceiptModalOpen] = useState(false);
     const [orderId, setOrderId] = useState('');
+    const [amount, setAmount] = useState()
     const [selectedLocation, setSelectedLocation] = useState(null);
     const navigate = useNavigate()
 
@@ -108,15 +109,15 @@ function Checkout() {
                     if (response.type === 'order_created') {
                         console.log('response', response?.data);
                         setOrderId(response.order_number);
+                        setAmount(response.amount)
                         showNotification({
                             title: 'Success',
                             message: 'Order created successfully!',
                             color: 'green',
                         });
                         setReceiptModalOpen(true);
-                       
+
                     } else {
-                        console.log(response);
                         showNotification({
                             title: 'Error',
                             message: 'Failed to create order. Please try again.',
@@ -124,7 +125,6 @@ function Checkout() {
                         });
                     }
                 };
-
 
                 ws.onerror = (error) => {
                     console.error('WebSocket error:', error);
@@ -280,6 +280,7 @@ function Checkout() {
             const response = JSON.parse(event.data);
             if (response.type === 'order_created') {
                 setOrderId(response.order_number);
+                setAmount(response.amount)
                 showNotification({
                     title: 'Success',
                     message: 'Order created successfully!',
@@ -308,7 +309,7 @@ function Checkout() {
     const handleCreateReceipt = async () => {
         try {
             const response = await axios.post('https://globus-nukus.uz/api/receipts/receipts_create', {
-                amount: total,
+                amount: amount,
                 order_id: orderId,
             });
 
@@ -326,7 +327,7 @@ function Checkout() {
                     alert('Your order is confirmed successfully!');
                     console.log(payResponse)
                     setReceiptModalOpen(false);
-                     navigate('/')    
+                    navigate('/')
                 }
             }
         } catch (error) {
