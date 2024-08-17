@@ -5,7 +5,7 @@ import axios from 'axios';
 import '@mantine/notifications/styles.css';
 import { notifications } from '@mantine/notifications';
 import { useDispatch } from 'react-redux';
-import { setUpStates } from '../store/Reducers/Reducer';
+import { setUpCategories, setUpProducts } from '../store/Reducers/Reducer';
 import Main from '../components/Main/Main';
 import Catalog from './../components/Catalog/Catalog';
 import Profile from './../components/Profile/Profile';
@@ -70,10 +70,10 @@ function Home() {
         while (hasMoreProducts) {
             try {
                 const response = await axios.get(`https://globus-nukus.uz/api/products?limit=${limit}&offset=${offset}`);
-                const catalogResponse = await axios.get('https://globus-nukus.uz/api/categories');
+
 
                 const fetchedProducts = response.data.data.items;
-                const fetchedCategories = catalogResponse.data.data.categories;
+
 
                 if (!Array.isArray(fetchedProducts) || fetchedProducts.length === 0) {
                     hasMoreProducts = false;
@@ -82,9 +82,8 @@ function Home() {
                     offset += limit;
                 }
 
-                dispatch(setUpStates({
+                dispatch(setUpProducts({
                     products: allProducts,
-                    categories: fetchedCategories,
                 }));
             } catch (error) {
                 console.error('Error fetching products:', error);
@@ -95,8 +94,24 @@ function Home() {
 
     };
 
+    const fetchCategories = async () => {
+        try {
+            const catalogResponse = await axios.get('https://globus-nukus.uz/api/categories');
+            const fetchedCategories = catalogResponse.data.data.categories;
+
+
+            dispatch(setUpCategories({
+                categories: fetchedCategories,
+            }));
+
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     useEffect(() => {
         fetchAllProducts();
+        fetchCategories()
     }, []);
 
     if (loading) {

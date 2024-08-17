@@ -270,6 +270,20 @@ function Main_profile() {
 
     /////// CHANGE PASSWORD ITEMS HAS FINISHED
 
+    const formatDate = (dateStr) => {
+        const date = new Date(dateStr);
+        const months = ["янв.", "февр.", "март", "апр.", "май", "июнь", "июль", "авг.", "сент.", "окт.", "нояб.", "дек."];
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        const hours = date.getHours();
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+
+        return `${day} ${month} ${year} ${hours}:${minutes}`;
+    }
+
+
+    console.log(orders)
 
     return (
         <div className='Info'>
@@ -349,19 +363,20 @@ function Main_profile() {
                                                 <tbody>
                                                     {orders?.map((order, index) => (
                                                         <>
-                                                            <tr className='Info-block-data-tr' key={index}>
+                                                            <tr className='Info-block-data-tr' key={index} onClick={() => OrderProducts(index)} >
                                                                 <td>{order.order_number}</td>
                                                                 <td>
                                                                     <span
                                                                         style={{
                                                                             color: order.status === "Ожидает подтверждения"
-                                                                                ? 'rgba(231, 255, 14, 0.835)'
+                                                                                ? 'rgba(180, 180, 0, 1)'
                                                                                 : order.status === 'Отменен'
-                                                                                    ? 'rgba(251, 15, 15, 0.881)'
-                                                                                    : 'rgba(4, 255, 4, 0.296)'
+                                                                                    ? 'rgba(200, 0, 0, 1)'
+                                                                                    : 'rgba(0, 150, 0, 1)'
                                                                         }}>
                                                                         {order.status}
                                                                     </span>
+
                                                                 </td>
                                                                 <td>{order.amount} сум</td>
                                                                 <td>{order.delivery_type === 1 ? "Подобрать" : "Доставка"}</td>
@@ -373,7 +388,95 @@ function Main_profile() {
                                                                         id={`order-${index}`}
                                                                         checked={showProduct[index]?.status}
                                                                         style={{ display: 'none' }}
-                                                                        onChange={() => OrderProducts(index)}
+
+                                                                    />
+                                                                    <label htmlFor={`order-${index}`}>
+                                                                        <i
+                                                                            className="fa-solid fa-chevron-right"
+                                                                            style={{
+                                                                                transform: showProduct[index]?.status ? 'rotate(90deg)' : 'rotate(0deg)',
+                                                                                transition: "0.2s all linear"
+                                                                            }}
+                                                                        ></i>
+                                                                    </label>
+                                                                </td>
+                                                            </tr>
+
+                                                            <tr className='Info-block-orders-products'>
+                                                                <td colSpan="7" style={{ padding: 0 }}>
+                                                                    <div className={`Info-block-orders-products-inner ${showProduct[index]?.status ? 'open' : ''}`}>
+                                                                        <ul className='Info-order-products-inner-mainInfo'>
+                                                                            <li><p>Дата оформления:</p> <p>{formatDate(order?.created_at)}</p></li>
+                                                                            <li><p>Статус обновлён:</p> <p>{formatDate(order?.status_updated)}</p></li>
+                                                                            <li><p>Полученный кэшбэк:</p> <p>{order?.cashback_earned} сум</p></li>
+                                                                            <li><p>Использованный кэшбэк:</p> <p>{order?.cashback_used} сум</p></li>
+                                                                            <li><p>Сумма c вычетом кэшбэк:</p> <p>{order?.amount} сум</p></li>
+                                                                            <li><p>Общая сумма:</p> <p>{order?.total_amount}  сум</p></li>
+                                                                        </ul>
+                                                                        <ul className='Info-products-inner-ul'>
+                                                                            <h3>Название продукты:</h3>
+                                                                            {
+                                                                                order.items?.map((product) => (
+                                                                                    <li key={product?.id}>
+                                                                                        <h4>Имя: {product?.product_name}</h4>
+                                                                                        <p>Количество: {product?.quantity} шт.</p>
+                                                                                        <p>Цена продукта: {product?.price} сум</p>
+                                                                                        <p>Общая стоимость: {product?.total_price} сум</p>
+                                                                                    </li>
+                                                                                ))
+                                                                            }
+                                                                        </ul>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : SearchedOrder?.length > 0 && orders?.length > 0 ?
+                                        <div className="Info-block-data-result" style={{ border: SearchedOrder?.length <= 0 ? ' ' : '1px solid rgb(209, 209, 209)' }}>
+                                            <table>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Номер заказа</th>
+                                                        <th>Статус</th>
+                                                        <th>Сумма</th>
+                                                        <th>Тип доставки</th>
+                                                        <th>Тип оплаты</th>
+                                                        <th>Получатель</th>
+
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {SearchedOrder?.map((order, index) => (
+                                                        <>
+                                                            <tr className='Info-block-data-tr' key={index} onClick={() => OrderProducts(index)} >
+                                                                <td>{order.order_number}</td>
+                                                                <td>
+                                                                    <span
+                                                                        style={{
+                                                                            color: order.status === "Ожидает подтверждения"
+                                                                                ? 'rgba(180, 180, 0, 1)'
+                                                                                : order.status === 'Отменен'
+                                                                                    ? 'rgba(200, 0, 0, 1)'
+                                                                                    : 'rgba(0, 150, 0, 1)'
+                                                                        }}>
+                                                                        {order.status}
+                                                                    </span>
+
+                                                                </td>
+                                                                <td>{order.amount} сум</td>
+                                                                <td>{order.delivery_type === 1 ? "Подобрать" : "Доставка"}</td>
+                                                                <td>{order.payment_type === 1 ? "Онлайн" : "Наличные"}</td>
+                                                                <td>{order.receiver.first_name}</td>
+                                                                <td>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        id={`order-${index}`}
+                                                                        checked={showProduct[index]?.status}
+                                                                        style={{ display: 'none' }}
+
                                                                     />
                                                                     <label htmlFor={`order-${index}`}>
                                                                         <i
@@ -410,84 +513,6 @@ function Main_profile() {
                                                 </tbody>
                                             </table>
                                         </div>
-                                    ) : SearchedOrder?.length > 0 && orders?.length > 0 ?
-                                        <div className="Info-block-data-result" style={{ border: SearchedOrder?.length <= 0 ? ' ' : '1px solid rgb(209, 209, 209)' }}>
-                                            <table>
-                                                <thead>
-                                                    <tr>
-                                                        <th>Номер заказа</th>
-                                                        <th>Статус</th>
-                                                        <th>Сумма</th>
-                                                        <th>Тип доставки</th>
-                                                        <th>Тип оплаты</th>
-                                                        <th>Получатель</th>
-
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {
-                                                        SearchedOrder?.map((order, index) => (
-                                                            <>
-                                                                <tr className={`Info-block-data-tr ${showProduct[index]?.status ? 'open' : ''}`} key={order.id}>
-                                                                    <td>{order.order_number}</td>
-                                                                    <td>
-                                                                        <span
-                                                                            style={{
-                                                                                color: order.status === "Ожидает подтверждения" ?
-                                                                                    'rgba(231, 255, 14, 0.835)' :
-                                                                                    'Отменен' ? 'rgba(251, 15, 15, 0.881)'
-                                                                                        : ' rgba(4, 255, 4, 0.296)'
-                                                                            }}>
-                                                                            {order.status}
-                                                                        </span>
-                                                                    </td>
-                                                                    <td>{order.amount} сум</td>
-                                                                    <td>{order.delivery_type === 1 ? "Подобрать" : "Доставка"}</td>
-                                                                    <td>{order.payment_type === 1 ? "Онлайн" : "Наличные"}</td>
-                                                                    <td>{order.receiver.first_name}</td>
-                                                                    <td>
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            id={`order-${index}`}
-                                                                            checked={showProduct[index]?.status}
-                                                                            style={{ display: 'none' }}
-                                                                            onChange={() => OrderProducts(index)}
-                                                                        />
-                                                                        <label htmlFor={`order-${index}`}>
-                                                                            <i
-                                                                                className="fa-solid fa-chevron-right"
-                                                                                style={{
-                                                                                    transform: showProduct[index]?.status ? 'rotate(90deg)' : 'rotate(0deg)',
-                                                                                    transition: "0.2s all linear"
-                                                                                }}
-                                                                            ></i>
-                                                                        </label>
-                                                                    </td>
-                                                                </tr >
-                                                                <tr className={`Info-block-orders-products`}>
-                                                                    <td colSpan="7" style={{ padding: 0 }}>
-                                                                        <div className="Info-block-orders-products-inner">
-                                                                            <ul className='Info-products-inner-ul'>
-                                                                                {
-                                                                                    order.items?.map((product) => (
-                                                                                        <li key={product?.id}>
-                                                                                            <h4>Имя: {product?.product_name}</h4>
-                                                                                            <p>Количество: {product?.quantity} шт.</p>
-                                                                                            <p>Цена продукта: {product?.price} сум</p>
-                                                                                            <p>Общая стоимость: {product?.total_price} сум</p>
-                                                                                        </li>
-                                                                                    ))
-                                                                                }
-                                                                            </ul>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            </>
-                                                        ))
-                                                    }
-                                                </tbody>
-                                            </table>
-                                        </div>
 
                                         : (
                                             <p style={{ textAlign: 'center' }}>Nothing is here 😑!</p>
@@ -520,7 +545,7 @@ function Main_profile() {
                                                         <Radio value="female" label="Female" checked={gender === 'female'} onChange={() => { setGender('female'); handleInputChange(); }} />
                                                     </Group>
                                                 </Radio.Group>
-                                                <TextInput label="Phone Number" defaultValue={phone_number} withAsterisk onChange={(e) => { setPhoneNumber(e.currentTarget.value); handleInputChange(); }} />
+                                                <TextInput label="Phone Number" defaultValue={phone_number} withAsterisk disabled onChange={(e) => { setPhoneNumber(e.currentTarget.value); handleInputChange(); }} />
                                             </div>
                                             <div className='Info-inner-form-btn'>
                                                 <button style={{ background: 'none', border: 'none', color: 'black', fontWeight: '600' }} onClick={handleSignOut}>Sign out</button>

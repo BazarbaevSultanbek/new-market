@@ -88,8 +88,11 @@ export const shopSlice = createSlice({
         error: null,
     },
     reducers: {
-        setUpStates(state, action) {
+        setUpProducts(state, action) {
             state.products = action.payload.products;
+
+        },
+        setUpCategories(state, action) {
             state.categories = action.payload.categories;
         },
         toggleLikeProduct(state, action) {
@@ -197,5 +200,5 @@ export const shopSlice = createSlice({
     }
 });
 
-export const { setUpStates, toggleLikeProduct, searchProducts, addToCart, removeFromCart, loadUserDataFromCookies } = shopSlice.actions;
+export const { setUpProducts, setUpCategories, toggleLikeProduct, searchProducts, addToCart, removeFromCart, loadUserDataFromCookies } = shopSlice.actions;
 export default shopSlice.reducer;

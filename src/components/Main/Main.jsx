@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Modal, rem, } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconCalendar } from '@tabler/icons-react';
@@ -30,7 +30,7 @@ function Main() {
     const InOrder_categories = [...categories]?.sort((a, b) => a.name.localeCompare(b.name));
     const likedProducts = useSelector(state => state?.shop?.likedProducts)
     const cart = useSelector(state => state?.shop?.cart)
-
+    const navigate = useNavigate()
 
     const { Search } = Input;
     const [search_Value, setSearchValue] = useState()
@@ -96,7 +96,7 @@ function Main() {
         }
     };
     //// LOGIN FETCH FINISHED
-
+    console.log(page)
     //// REGISTRATION
     const [first_name, setFirstName] = useState()
     const [last_name, setLastName] = useState()
@@ -195,7 +195,6 @@ function Main() {
             <div className="Main-top">
                 <div className="Main-top-info">
                     <div className="Main-top-info-location">
-                        <i className="fa-solid fa-location-dot"></i>
                         <span>City:</span>
                         <a href="#">Nukus</a>
                     </div>
@@ -248,9 +247,10 @@ function Main() {
 
 
                 <div className="Main-display" style={{ display: page === 'checkout' ? 'none' : 'block' }}>
-                    <div className="Main-header" >
-                        <div className="Main-header-logo">
-                            <a href='/'><h2>Globus-Nukus</h2></a>
+                    <div className="Main-header">
+                        <div className="Main-header-logo" onClick={() => { setCatalog(''), setPage('main') }}>
+                            <i class="fa-solid fa-earth-asia"></i>
+                            <><h2>Globus-Nukus</h2></>
                         </div>
 
 

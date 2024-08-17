@@ -193,7 +193,7 @@ function Orders({ setPage }) {
                                                 </div>
                                                 <div className="Orders-info-prices-total">
                                                     <p>Общая сумма</p>
-                                                    <p>{order?.total_price}</p>
+                                                    <p>{order?.total_amount}  сум</p>
                                                 </div>
                                             </div>
                                         </div>

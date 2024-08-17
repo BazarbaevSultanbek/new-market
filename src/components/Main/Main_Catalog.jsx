@@ -20,7 +20,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
     const products = useSelector(state => state?.shop?.products);
     const likedProducts = useSelector(state => state.shop.currentUser.LikedProducts);
     const navigate = useNavigate()
-    const newProduct = products.filter(item => item?.is_new);
+    const newProduct = products?.filter(item => item?.is_new);
 
     /// UI hooks
     const autoplay = useRef(Autoplay({ delay: 2000 }));
@@ -102,7 +102,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
     //// pagination
     const [currentPage, setCurrentPage] = useState(1);
     let productsPerPage = 18;
-    const currentProducts = products.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
+    const currentProducts = products?.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
     const paginate = (page) => setCurrentPage(page);
     ///// pagination is finished
 
@@ -116,7 +116,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
                 </div>
                 <div style={{ display: cast === 'new' ? 'block' : 'none' }}>
                     <div className="Main-new" >
-                        {newProduct.map((item) => (
+                        {newProduct?.map((item) => (
                             <div className='Product-block-item' key={item?.id}>
                                 <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item?.id } })}>
                                     <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
@@ -157,7 +157,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
                 </div>
                 <div style={{ display: cast === 'recommend' ? 'block' : 'none' }}>
                     <div className="Main-block">
-                        {list.map((item) => (
+                        {list?.map((item) => (
                             <div className='Product-block-item' key={item?.id}>
                                 <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item?.id } })}>
                                     <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
@@ -199,7 +199,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
                         <Pagination
                             page={currentPage}
                             onChange={paginate}
-                            total={Math.ceil(products.length / productsPerPage)}
+                            total={Math.ceil(products?.length / productsPerPage)}
                             siblings={1}
                             boundaries={0}
                             size="md"
@@ -228,7 +228,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
                         ))}
                     </div>
                     <div className="Category-block-products">
-                        {category_Products.map((item) => (
+                        {category_Products?.map((item) => (
                             <div className='Product-block-item' key={item.id}>
                                 <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item?.id } })}>
                                     <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
@@ -275,9 +275,9 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
                 main_Block(searchedProducts)
             );
         } else {
-            const filteredCategories = categories.filter((item) => item.name.toLowerCase().startsWith(search_Value.toLowerCase()));
+            const filteredCategories = categories?.filter((item) => item.name.toLowerCase().startsWith(search_Value.toLowerCase()));
             if (filteredCategories.length > 0) {
-                const categoryProducts = products.filter(product => filteredCategories.some(category => category.id === product.categoryId));
+                const categoryProducts = products?.filter(product => filteredCategories?.some(category => category.id === product.categoryId));
                 return (
                     main_Block(categoryProducts)
                 );
