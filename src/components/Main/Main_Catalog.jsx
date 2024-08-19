@@ -9,13 +9,14 @@ import Autoplay from 'embla-carousel-autoplay';
 import { addToCart, toggleLikeProduct } from '../../store/Reducers/Reducer';
 import superPrice from '../images/super.png';
 import axios from 'axios';
+import '../style/Main.scss'
 
 
 
 
 
 
-const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
+const CatalogPage = ({ catalog, setCatalog, search_Value, setPage }) => {
     const dispatch = useDispatch()
     const products = useSelector(state => state?.shop?.products);
     const likedProducts = useSelector(state => state.shop.currentUser.LikedProducts);
@@ -23,7 +24,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
     const newProduct = products?.filter(item => item?.is_new);
 
     /// UI hooks
-    const autoplay = useRef(Autoplay({ delay: 2000 }));
+    const autoplay = useRef(Autoplay({ delay: 3000 }));
     /// UI hooks are finished
 
 
@@ -108,6 +109,8 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
 
 
     const [cast, setCast] = useState('new')
+
+
     const main_Block = (list) => {
         return (
             <div className="Main-cast">
@@ -118,8 +121,8 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
                     <div className="Main-new" >
                         {newProduct?.map((item) => (
                             <div className='Product-block-item' key={item?.id}>
-                                <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item?.id } })}>
-                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
+                                <div className="Product-block-item-images" >
+                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} onClick={() => navigate('/product', { state: { id: item?.id } })} />
                                     <button onClick={() => handleLikeClick(item.id)}>
                                         <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
                                     </button>
@@ -159,8 +162,8 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
                     <div className="Main-block">
                         {list?.map((item) => (
                             <div className='Product-block-item' key={item?.id}>
-                                <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item?.id } })}>
-                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
+                                <div className="Product-block-item-images" >
+                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} onClick={() => navigate('/product', { state: { id: item?.id } })} />
                                     <button onClick={() => handleLikeClick(item.id)}>
                                         <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
                                     </button>
@@ -298,9 +301,9 @@ const CatalogPage = ({ catalog, setCatalog, search_Value }) => {
                         onMouseLeave={autoplay.current.reset}
                     >
                         {
-                            filteredProduct?.map(item => (
+                            filteredProduct?.map((item, index) => (
                                 <Carousel.Slide id={item.id} key={item.id}>
-                                    <div className='Main-ad-slide'>
+                                    <div className='Main-ad-slide' onClick={() => { navigate('/ad', { state: { product: filteredProduct, index: index } }), setPage('ad') }}>
                                         <div className='Main-ad-slide-inner'>
                                             <div className='Main-slide-inner-info'>
                                                 <span id='item_name'>{item.name}</span>

@@ -23,6 +23,7 @@
     "@tabler/icons-react": "^3.9.0",
     "antd": "^5.19.1",
     "axios": "^1.7.2",
+    "circular-json": "^0.5.9",
     "dayjs": "^1.11.11",
     "embla-carousel-autoplay": "^7.1.0",
     "embla-carousel-react": "^7.1.0",

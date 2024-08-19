@@ -16,6 +16,7 @@ import Orders from './components/Orders/Orders';
 import '@mantine/notifications/styles.css';
 import { Notifications } from '@mantine/notifications';
 import { CssLoader } from './CssLoader';
+import Main_add from './components/Main/Main_add';
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
               <Route path="checkout" element={<Checkout />} />
               <Route path="profile" element={<Profile />} />
               <Route path="orders" element={<Orders />} />
+              <Route path="/ad" element={<Main_add />} />
               <Route path='/product' element={<Product />} />
             </Route>
           </Routes>

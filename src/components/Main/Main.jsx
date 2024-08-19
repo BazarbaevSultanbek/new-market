@@ -19,18 +19,22 @@ import Main_profile from './Main_profile';
 import Checkout from '../Checkout/Checkout';
 import Main_validation from './Main_validation';
 import Main_registration from './Main_registration';
-
+import Main_add from './Main_add';
+import map from '../images/maps.png'
+import '../style/Main.scss'
+import { useAuth } from '../Auth/useAuth';
+import { useValidationTimer } from '../ValidationTimer/ValidationTimer';
 
 
 
 function Main() {
+    const { fetchLogIn, fetchRegistration, fetchValidation } = useAuth();
     const dispatch = useDispatch()
     const currentUser = useSelector(state => state?.shop?.currentUser)
     const categories = useSelector(state => state?.shop?.categories)
     const InOrder_categories = [...categories]?.sort((a, b) => a.name.localeCompare(b.name));
     const likedProducts = useSelector(state => state?.shop?.likedProducts)
     const cart = useSelector(state => state?.shop?.cart)
-    const navigate = useNavigate()
 
     const { Search } = Input;
     const [search_Value, setSearchValue] = useState()
@@ -53,7 +57,6 @@ function Main() {
     //// MODULE STATUS
     const [module_status, setStatus] = useState()
     const [validation_status, setValidation] = useState(false)
-    const [countdown, setCountdown] = useState(0);
     //// MODULE STATUS FINISHED
 
 
@@ -69,34 +72,20 @@ function Main() {
             });
         }
     }, [dispatch]);
-    const fetchLogIn = async () => {
-        try {
-            const accResponse = await axios.post('https://globus-nukus.uz/api/token', {
-                phone: phoneNumber,
-                password: password
-            });
 
-            const { access, refresh } = accResponse.data.data.token;
-
-            Cookies.set('token', access, { expires: 14 });
-            Cookies.set('refresh_token', refresh, { expires: 14 });
-
-            dispatch(fetchUserProfile()).then(() => {
-                dispatch(loadUserDataFromCookies());
-            });
-
-            close();
-        } catch (error) {
-            showNotification({
-                title: 'Error',
-                message: error?.response?.data?.message || 'Error with logging in',
-                color: 'red'
-            });
-            console.log(error);
+    const handleKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            fetchLogIn(phoneNumber, password, close);
         }
     };
+    const handleLogin = async () => {
+        await fetchLogIn(phoneNumber, password, close)
+    }
     //// LOGIN FETCH FINISHED
-    console.log(page)
+
+
+
+
     //// REGISTRATION
     const [first_name, setFirstName] = useState()
     const [last_name, setLastName] = useState()
@@ -105,72 +94,18 @@ function Main() {
     const [date_of_birth, setDate] = useState()
     const [gender, setGender] = useState()
     const icon = <IconCalendar style={{ width: rem(18), height: rem(18) }} stroke={1.5} />;
-    const fetchRegistration = async () => {
-        try {
-            const formattedDate = date_of_birth ? dayjs(date_of_birth).format('YYYY-MM-DD') : null;
-            const RegistResponse = await axios.post('https://globus-nukus.uz/api/users', {
-                first_name: first_name,
-                last_name: last_name,
-                password: pass_word,
-                phone: phone_number,
-                date_of_birth: formattedDate,
-                gender: gender.toLowerCase(),
-            });
-            console.log(RegistResponse.data);
-            setCountdown(60)
-            setValidation(true)
-        } catch (error) {
-            showNotification({
-                title: 'Error',
-                message: error?.response?.data?.message || 'Error while registration',
-                color: 'red'
-            });
-            console.log(error);
-        }
-    };
+    const handleRegistration = async () => { await fetchRegistration(first_name, last_name, date_of_birth, pass_word, phone_number, gender, close); };
     //// REGISTRATION FINISHED
 
     //// VALIDATION
     const [code, setCode] = useState()
-    const fetchValidation = async () => {
-
-        try {
-            const response = await axios.post('https://globus-nukus.uz/api/users/verify', {
-                phone: phone_number,
-                otp: code,
-            })
-
-            const { access, refresh } = response.data.data.token;
-
-            Cookies.set('token', access, { expires: 14 });
-            Cookies.set('refresh_token', refresh, { expires: 14 });
-
-            dispatch(fetchUserProfile()).then(() => {
-                dispatch(loadUserDataFromCookies());
-            });
-
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    const handleValidation = async () => { await fetchValidation(phone_number, code); };
     //// VALIDATION HAS FINISHED
 
     //// VALIDATION TIME FUNCTION
-    const [resend_status, setResend_status] = useState(false)
-    useEffect(() => {
-        let interval;
-        if (countdown > 0) {
-            setResend_status(false)
-            interval = setInterval(() => {
-                setCountdown((prevCountdown) => prevCountdown - 1);
-                console.log(countdown);
-            }, 1000);
-        } else if (countdown === 0) {
-            setResend_status(true);
-        }
-        return () => clearInterval(interval);
-    }, [countdown]);
+    const { countdown, resend_status, setResend_status, setCountdown } = useValidationTimer(60);
     ////VALIDATION TIME FUNCTION FINISHED
+
 
     //// RESEND CODE FUNCTION
     const handleResendCode = async () => {
@@ -190,15 +125,38 @@ function Main() {
     };
     /// RESEND CODE FUNCTION FINISHED
 
+
+    const [numberOfCategories, setNumberOfCategories] = useState(10);
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth < 1240) {
+                setNumberOfCategories(8);
+            } else {
+                setNumberOfCategories(10);
+            }
+        };
+        handleResize();
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
+
+
     return (
         <div className='Main'>
             <div className="Main-top">
                 <div className="Main-top-info">
                     <div className="Main-top-info-location">
+                        <img src={map} alt="" />
                         <span>City:</span>
                         <a href="#">Nukus</a>
                     </div>
                     <div className="Main-top-info-text">
+                        <a href="#"> <i class="fa-brands fa-google-play"></i> Install App</a>
                         <a href="#">Ask a question</a>
                         <p onClick={() => setPage('myProfile')}>My orders</p>
                     </div>
@@ -211,12 +169,13 @@ function Main() {
                             setPhoneNumber={setPhoneNumber}
                             setPassword={setPassword}
                             setStatus={setStatus}
-                            fetchLogIn={fetchLogIn}
+                            fetchLogIn={handleLogin}
+                            handleKeyDown={handleKeyDown}
                         />
                     ) : validation_status ? (
                         <Main_validation
                             setCode={setCode}
-                            fetchValidation={fetchValidation}
+                            fetchValidation={handleValidation}
                             resend_status={resend_status}
                             countdown={countdown}
                             handleResendCode={handleResendCode}
@@ -230,7 +189,7 @@ function Main() {
                             setDate={setDate}
                             setGender={setGender}
                             icon={icon}
-                            fetchRegistration={fetchRegistration} />
+                            fetchRegistration={handleRegistration} />
                     )
                     }
                 </Modal>
@@ -331,12 +290,31 @@ function Main() {
 
                     </div>
                 </div>
+                <div className="Main-links">
+                    <ul>
+                        <li key="Распродажа" onClick={() => { setCatalog(item?.id), setCatalogStatus(!catalog_status), setPage('main') }}>
+                            <img src="https://static.uzum.uz/fast_categories/%D0%A7%D0%B8%D0%BB%D0%BB%D1%8F.png" alt="" />
+                            Распродажа
+                        </li>
+                        {
+                            categories?.slice(0, numberOfCategories).map((item) => (
+                                <li key={item?.id} onClick={() => { setCatalog(item?.id), setCatalogStatus(false), setPage('main') }}>
+                                    {item?.name}
+                                </li>
+                            ))
+                        }
+                        <li key="more" onClick={() => { setCatalogStatus(true); }}>
+                            Ёще
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </li>
+                    </ul>
+                </div>
                 <div>
                 </div>
                 <>
                     {
                         page === 'main' ?
-                            <CatalogPage catalog={catalog} setCatalog={setCatalog} search_Value={search_Value} />
+                            <CatalogPage catalog={catalog} setCatalog={setCatalog} search_Value={search_Value} setPage={setPage} />
                             : page === 'myProfile' ?
                                 <Main_profile />
                                 : page === 'MySaved' ?
@@ -347,7 +325,9 @@ function Main() {
                                             <Checkout />
                                             : page === "product" ?
                                                 <Product />
-                                                : ''
+                                                : page === "ad" ?
+                                                    <Main_add setPage={setPage} />
+                                                    : ""
                     }
 
                 </>
