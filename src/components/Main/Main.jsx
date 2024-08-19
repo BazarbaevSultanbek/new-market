@@ -156,7 +156,7 @@ function Main() {
                         <a href="#">Nukus</a>
                     </div>
                     <div className="Main-top-info-text">
-                        <a href="#"> <i class="fa-brands fa-google-play"></i> Install App</a>
+                        <a href="https://play.google.com/store/apps/details?id=uz.softium.azda_admin"> <i class="fa-brands fa-google-play"></i> Install App</a>
                         <a href="#">Ask a question</a>
                         <p onClick={() => setPage('myProfile')}>My orders</p>
                     </div>
