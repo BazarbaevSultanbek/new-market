@@ -321,7 +321,7 @@
 }
 
 .Main-links {
-    display: none;
+    display: none !important;
 }
 
 .Product-item-info-disc {
@@ -534,7 +534,7 @@
             font-weight: 500;
         }
 
-        a {            
+        a {
             color: black;
             text-decoration: none;
         }
@@ -588,7 +588,7 @@
 
 
     .Main-links {
-        display: block;
+        display: block !important;
 
         ul {
             display: flex;
@@ -1043,6 +1043,7 @@
     //// Main_saved 
     .Liked {
         display: block;
+        margin-top: 30px;
     }
 
     .Liked-header {
@@ -1065,6 +1066,10 @@
         padding: 10px 7px 100px 7px;
         overflow: hidden;
     }
+
+    .Cart {
+        margin-top: 20px;
+    }
 }
 
 
@@ -1074,6 +1079,16 @@
         gap: 20px;
     }
 
+
+    .Main-cast {
+        max-width: 1160px;
+        margin: auto;
+    }
+
+    .Main-new {
+        justify-content: start;
+        gap: 20px;
+    }
 
     .Category-block {
         padding: 0 50px;
@@ -1114,7 +1129,7 @@
 
 
     .Main-cast-btn {
-        padding: 20px 80px;
+        padding: 20px 80px 20px 10px;
     }
 
 

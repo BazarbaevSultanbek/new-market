@@ -21,11 +21,8 @@ const CatalogPage = ({ catalog, setCatalog, search_Value, setPage }) => {
     const products = useSelector(state => state?.shop?.products);
     const likedProducts = useSelector(state => state.shop.currentUser.LikedProducts);
     const navigate = useNavigate()
-    const newProduct = products?.filter(item => item?.is_new);
 
-    /// UI hooks
     const autoplay = useRef(Autoplay({ delay: 3000 }));
-    /// UI hooks are finished
 
 
 
@@ -38,15 +35,34 @@ const CatalogPage = ({ catalog, setCatalog, search_Value, setPage }) => {
     useEffect(() => {
         const fetchSingleCategory = async () => {
             if (catalog) {
-                const response = products?.filter((item) => item?.category === catalog);
-                setCategory_products(response || []);
+                const response = await axios.get(`https://globus-nukus.uz/api/products?category=${catalog}`)
+                setCategory_products(response?.data?.data?.items);
             }
         };
 
         fetchSingleCategory();
-    }, [catalog, products]);
+    }, [catalog]);
 
 
+
+    ////// FETCHING NEW PRODUCTS 
+    const [newProduct, setNewProduct] = useState()
+
+    useEffect(() => {
+        const fetchingNewProducts = async () => {
+            try {
+                const request = await axios.get('https://globus-nukus.uz/api/products/newest')
+                setNewProduct(request?.data?.data?.items)
+            } catch (error) {
+                notifications.show({
+                    title: 'Error fetching',
+                    message: 'Error to fetching new Products',
+                    color: 'red',
+                });
+            }
+        }
+        fetchingNewProducts()
+    }, [])
 
     //// Search field    
     const [searchedProducts, setSearchedProducts] = useState()
@@ -219,9 +235,11 @@ const CatalogPage = ({ catalog, setCatalog, search_Value, setPage }) => {
     }
 
 
+    console.log(search_Value)
 
 
-    if (catalog && category_Products?.length > 0) {
+
+    if (catalog && category_Products?.length > 0 && search_Value?.length <= 0) {
         return (
             <div className='Category-page'>
                 <div className="Category-block">
@@ -232,9 +250,9 @@ const CatalogPage = ({ catalog, setCatalog, search_Value, setPage }) => {
                     </div>
                     <div className="Category-block-products">
                         {category_Products?.map((item) => (
-                            <div className='Product-block-item' key={item.id}>
-                                <div className="Product-block-item-images" onClick={() => navigate('/product', { state: { id: item?.id } })}>
-                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} />
+                            <div className='Product-block-item' key={item?.id}>
+                                <div className="Product-block-item-images" >
+                                    <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} onClick={() => navigate('/product', { state: { id: item?.id } })} />
                                     <button onClick={() => handleLikeClick(item.id)}>
                                         <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
                                     </button>
@@ -275,18 +293,48 @@ const CatalogPage = ({ catalog, setCatalog, search_Value, setPage }) => {
     } else if (search_Value?.length > 0) {
         if (searchedProducts?.length > 0) {
             return (
-                main_Block(searchedProducts)
+                <div className="Main-block">
+                    {searchedProducts?.map((item) => (
+                        <div className='Product-block-item' key={item?.id}>
+                            <div className="Product-block-item-images" >
+                                <img src={item?.images[0]?.image} alt="" style={{ display: item?.images[0]?.image ? 'block' : 'none' }} onClick={() => navigate('/product', { state: { id: item?.id } })} />
+                                <button onClick={() => handleLikeClick(item.id)}>
+                                    <i className={`fa-heart ${likedProducts?.includes(item.id) ? 'fa-solid liked' : 'fa-regular'}`}></i>
+                                </button>
+                                <span style={{ display: item.is_new || item.discounts ? 'block' : 'none' }} id={item.is_new ? 'labelNew' : item.discount_price !== null ? 'labelDisc' : ''}>
+                                    {item.is_new ? 'NEW' : item.discount_price ? 'SALE' : ''}
+                                </span>
+                            </div>
+                            <div className="Product-block-item-info">
+                                <div className="Product-item-info-name">
+                                    <span>{item.name}</span>
+                                </div>
+                                <div className="Product-item-info-disc">
+                                    <div>
+                                        <p>{formatPrice(item.price)} so'm</p>
+                                        <span>{item?.discounts?.discount_rate} 12 %</span>
+                                    </div>
+                                </div>
+                                <div className="Product-item-info-flex">
+                                    <div className='Product-item-info-disprice'>
+                                        <p>{item?.discount_price ? formatPrice(item.discount_price) : formatPrice(item.price)} so'm</p>
+                                    </div>
+                                    <button onClick={() => {
+                                        handleAddToCart(item);
+                                        notifications.show({
+                                            title: 'Adding Product',
+                                            message: 'Product is added 🛒',
+                                            color: 'green',
+                                        });
+                                    }}><i className="fa-solid fa-cart-arrow-down"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             );
         } else {
-            const filteredCategories = categories?.filter((item) => item.name.toLowerCase().startsWith(search_Value.toLowerCase()));
-            if (filteredCategories.length > 0) {
-                const categoryProducts = products?.filter(product => filteredCategories?.some(category => category.id === product.categoryId));
-                return (
-                    main_Block(categoryProducts)
-                );
-            } else {
-                return <div style={{ display: 'flex', justifyContent: 'center' }}>No results found😢</div>;
-            }
+            return <div style={{ display: 'flex', justifyContent: 'center', height: '50vh', alignItems: 'center' }}>No results found😢</div>;
         }
     } else {
         return (

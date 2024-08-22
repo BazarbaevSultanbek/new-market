@@ -290,7 +290,7 @@ function Main() {
 
                     </div>
                 </div>
-                <div className="Main-links">
+                <div className="Main-links" style={{ display: page === 'checkout' ? 'none' : 'block' }}>
                     <ul>
                         <li key="Распродажа" onClick={() => { setCatalog(item?.id), setCatalogStatus(!catalog_status), setPage('main') }}>
                             <img src="https://static.uzum.uz/fast_categories/%D0%A7%D0%B8%D0%BB%D0%BB%D1%8F.png" alt="" />

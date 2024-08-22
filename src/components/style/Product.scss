@@ -1,12 +1,17 @@
 .Product {
     display: flex;
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
-    padding: 0 0 100px 0; // add some padding for better spacing
-    overflow: auto; // Ensure the entire product container can scroll if needed
+    padding: 0 0 100px 0;
 }
 
+
+.center-wrong {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50vh;
+    width: 100%;
+}
 
 .Product-header {
     margin: 15px 0;
@@ -170,9 +175,22 @@
         }
     }
 
+    .Main-block {
+        margin-top: 30px;
+    }
+
 }
 
 @media only screen and (min-width:1024px) {
+
+    .Product {
+        margin-top: 20px;
+
+        .container {
+            max-width: 1160px;
+        }
+    }
+
     .Product-block {
         gap: 30px;
 
