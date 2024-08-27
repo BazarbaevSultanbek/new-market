@@ -83,7 +83,6 @@ export const shopSlice = createSlice({
         },
         products: [],
         categories: [],
-        filteredProducts: [],
         loading: false,
         error: null,
     },
@@ -113,11 +112,6 @@ export const shopSlice = createSlice({
                 })
             }
             Cookies.set('LikedProducts', JSON.stringify(state.currentUser.LikedProducts), { expires: 14 });
-        },
-        searchProducts(state, action) {
-            state.filteredProducts = state.products.filter((item) =>
-                item.name.toLowerCase().startsWith(action.payload.word.toLowerCase())
-            );
         },
         addToCart(state, action) {
             const existingProduct = state.currentUser.cart.findIndex(item => item.product.id === action.payload.id);
@@ -200,5 +194,5 @@ export const shopSlice = createSlice({
     }
 });
 
-export const { setUpProducts, setUpCategories, toggleLikeProduct, searchProducts, addToCart, removeFromCart, loadUserDataFromCookies } = shopSlice.actions;
+export const { setUpProducts, setUpCategories, toggleLikeProduct, addToCart, removeFromCart, loadUserDataFromCookies } = shopSlice.actions;
 export default shopSlice.reducer;

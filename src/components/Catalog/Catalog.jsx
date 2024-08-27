@@ -1,26 +1,21 @@
 import { Input } from 'antd';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import '../style/Catalog.scss';
-import { addToCart, searchProducts, toggleLikeProduct } from '../../store/Reducers/Reducer';
+import { addToCart, toggleLikeProduct } from '../../store/Reducers/Reducer';
+import axios from 'axios';
 
 function Catalog() {
     const { Search } = Input;
-    const categories = useSelector(state => state?.shop.categories);
     const likedProducts = useSelector(state => state?.shop.LikedProducts);
-    const filteredProducts = useSelector(state => state?.shop.filteredProducts);
     const dispatch = useDispatch();
-    const products = useSelector(state => state?.shop.products);
     const [focus, setFocus] = useState(false);
     const [result, setResult] = useState([]);
-
-    const filterProByCategory = (id) => {
-        const filteredProducts = products.filter(item => item.category === id);
-        setResult(filteredProducts);
-    };
+    const [search_Value, setSearch_Value] = useState()
 
     const handleLikeClick = (productId) => {
+
         dispatch(toggleLikeProduct(productId));
     };
 
@@ -32,6 +27,21 @@ function Catalog() {
         return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
     };
 
+    useEffect(() => {
+        const fetchSearchRequest = async () => {
+            try {
+                const response = await axios.get(`https://globus-nukus.uz/api/products?search=${search_Value}`);
+                setResult(response?.data?.data?.items || []);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        if (search_Value) {
+            fetchSearchRequest();
+        }
+    }, [search_Value]);
+
     return (
         <div className='Catalog'>
             <div className="container">
@@ -41,28 +51,14 @@ function Catalog() {
                             placeholder="Search items"
                             style={{ width: '95%' }}
                             onFocus={() => setFocus(!focus)}
-                            onChange={(e) => {
-                                dispatch(searchProducts({ word: e.target.value }));
-                            }}
+                            onChange={(e) => setSearch_Value(e?.currentTarget?.value)}
                         />
-                    </div>
-
-                    <div className="Catalog-block-categories" style={{ display: focus ? 'none' : 'block' }}>
-                        <ul>
-                            {categories.map((category) => (
-                                <li key={category.id} onClick={() => filterProByCategory(category.id)}>
-                                    <Link>
-                                        <span>{category.name}</span>
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
                     </div>
 
                     <div className="Catalog-block-result" style={{ display: focus ? 'block' : 'none' }}>
                         <div className="Catalog-block-result-inner">
-                            {filteredProducts.length > 0 ? (
-                                filteredProducts.map((item) => (
+                            {result?.length > 0 ? (
+                                result.map((item) => (
                                     <div className='Product-block-item' key={item.id}>
                                         <div className="Product-block-item-images">
                                             {item?.images.map((img) => (

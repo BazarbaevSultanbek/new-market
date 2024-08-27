@@ -31,7 +31,6 @@ function Home() {
         };
     }, [page]);
 
-    console.log(page)
 
 
     useEffect(() => {
@@ -61,38 +60,7 @@ function Home() {
 
     const [loading, setLoading] = useState(true);
 
-    const fetchAllProducts = async () => {
-        let allProducts = [];
-        let offset = 0;
-        const limit = 20;
-        let hasMoreProducts = true;
 
-        while (hasMoreProducts) {
-            try {
-                const response = await axios.get(`https://globus-nukus.uz/api/products?limit=${limit}&offset=${offset}`);
-
-
-                const fetchedProducts = response.data.data.items;
-
-
-                if (!Array.isArray(fetchedProducts) || fetchedProducts.length === 0) {
-                    hasMoreProducts = false;
-                } else {
-                    allProducts = [...allProducts, ...fetchedProducts];
-                    offset += limit;
-                }
-
-                dispatch(setUpProducts({
-                    products: allProducts,
-                }));
-            } catch (error) {
-                console.error('Error fetching products:', error);
-                hasMoreProducts = false;
-            }
-            setLoading(false);
-        }
-
-    };
 
     const fetchCategories = async () => {
         try {
@@ -104,13 +72,14 @@ function Home() {
                 categories: fetchedCategories,
             }));
 
+            setLoading(false)
+
         } catch (error) {
             console.log(error)
         }
     }
 
     useEffect(() => {
-        fetchAllProducts();
         fetchCategories()
     }, []);
 

@@ -144,7 +144,7 @@ function Main() {
         };
     }, []);
 
-
+    console.log('catalog', catalog, catalog_status)
 
     return (
         <div className='Main'>
@@ -156,7 +156,7 @@ function Main() {
                         <a href="#">Nukus</a>
                     </div>
                     <div className="Main-top-info-text">
-                        <a href="https://play.google.com/store/apps/details?id=uz.softium.azda_admin"> <i class="fa-brands fa-google-play"></i> Install App</a>
+                        <a href="https://play.google.com/store/apps/details?id=uz.softium.azda_admin"> <i className="fa-brands fa-google-play"></i> Install App</a>
                         <a href="#">Ask a question</a>
                         <p onClick={() => setPage('myProfile')}>My orders</p>
                     </div>
@@ -207,8 +207,8 @@ function Main() {
 
                 <div className="Main-display" style={{ display: page === 'checkout' ? 'none' : 'block' }}>
                     <div className="Main-header">
-                        <div className="Main-header-logo" onClick={() => { setCatalog(''), setPage('main') }}>
-                            <i class="fa-solid fa-earth-asia"></i>
+                        <div className="Main-header-logo" onClick={() => { setCatalog(''), setPage('main'), setCatalogStatus(false) }}>
+                            <i className="fa-solid fa-earth-asia"></i>
                             <><h2>Globus-Nukus</h2></>
                         </div>
 
@@ -305,7 +305,7 @@ function Main() {
                         }
                         <li key="more" onClick={() => { setCatalogStatus(true); }}>
                             Ёще
-                            <i class="fa-solid fa-chevron-down"></i>
+                            <i className="fa-solid fa-chevron-down"></i>
                         </li>
                     </ul>
                 </div>
