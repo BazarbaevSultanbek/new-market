@@ -61,7 +61,9 @@ function Main_saved() {
 
     if (!likedProducts || likedProducts.length === 0) {
         return (
-            <p style={{ textAlign: 'center', margin: '0 auto' }}>You have no saved items yet.</p>
+            <div style={{display:"flex", justifyContent:'center',alignItems:'center'}}>
+                <p style={{ textAlign: 'center', margin: '0 auto' }}>You have no saved items yet.</p>
+            </div>
         );
     }
 
