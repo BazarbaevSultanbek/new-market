@@ -47,8 +47,6 @@ function Orders({ setPage }) {
             }
         };
     }, []);
-
-    console.log(currentUser)
     const [showProduct, setShowProduct] = useState([]);
 
     useEffect(() => {
@@ -123,7 +121,7 @@ function Orders({ setPage }) {
                         <ul className='Orders-block-ul'>
                             {
                                 orders?.map((order, index) => (
-                                    <li className={`Orders-block-ul-li ${showProduct[index]?.status ? 'open' : ''}`}>
+                                    <li className={`Orders-block-ul-li ${showProduct[index]?.status ? 'open' : ''}`} onClick={() => OrderProducts(index)}>
                                         <div className='Orders-status'>
                                             <div className='Orders-ul-li-title'>
                                                 <span>{order?.status}</span>
@@ -135,7 +133,7 @@ function Orders({ setPage }) {
                                                     id={`order-${index}`}
                                                     checked={showProduct[index]?.status}
                                                     style={{ display: 'none' }}
-                                                    onChange={() => OrderProducts(index)}
+
                                                 />
                                                 <label htmlFor={`order-${index}`}>
                                                     <i
@@ -194,6 +192,17 @@ function Orders({ setPage }) {
                                                 <div className="Orders-info-prices-total">
                                                     <p>Общая сумма</p>
                                                     <p>{order?.total_amount}  сум</p>
+                                                </div>
+                                                <div
+                                                    className='Orders-info-prices-bill'
+                                                    style={{
+                                                        display: order?.online_payments?.length > 0 ? 'flex' : 'none',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        marginTop: '10px'
+                                                    }}>
+                                                    <p>Чек:</p>
+                                                    <a href={order?.online_payments?.qr_code_url} className='downloadBill' download>Download</a>
                                                 </div>
                                             </div>
                                         </div>

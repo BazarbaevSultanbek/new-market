@@ -115,7 +115,7 @@ function Checkout() {
                             message: 'Order created successfully!',
                             color: 'green',
                         });
-                        setReceiptModalOpen(true);
+                        navigate('/');
 
                     } else {
                         showNotification({
@@ -308,11 +308,13 @@ function Checkout() {
 
     const handleCreateReceipt = async () => {
         try {
+            console.log('fetching receipt')
             const response = await axios.post('https://globus-nukus.uz/api/receipts/receipts_create', {
                 amount: amount,
                 order_id: orderId,
             });
 
+            console.log('response rec', response)
             if (response.data.success) {
                 const invoiceId = response.data.data.receipt._id;
 
@@ -332,6 +334,9 @@ function Checkout() {
             }
         } catch (error) {
             console.error('Error creating receipt:', error);
+        }
+        finally {
+            navigate('/')
         }
     };
 

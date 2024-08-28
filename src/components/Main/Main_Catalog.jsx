@@ -75,8 +75,7 @@ const CatalogPage = ({ catalog, setCatalog, search_Value, setPage }) => {
     //// catalog navi hooks are finished
 
     useEffect(() => {
-        const fetchSingleCategory = async () => {
-            console.log(catalog)
+        const fetchSingleCategory = async () => {        
             if (catalog) {
                 try {
                     setLoading(true)

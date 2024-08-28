@@ -144,7 +144,6 @@ function Main() {
         };
     }, []);
 
-    console.log('catalog', catalog, catalog_status)
 
     return (
         <div className='Main'>

@@ -75,6 +75,9 @@ function Main_profile() {
     }, []);
 
 
+
+
+
     const [orderSearchValue, setOrderSearch] = useState('')
     const [SearchedOrder, setSearchedOrder] = useState()
     useEffect(() => {
@@ -283,7 +286,10 @@ function Main_profile() {
     }
 
 
-    console.log(orders)
+
+    const billDownload = (id) => {
+        orders?.map((order) => order?.id === id)
+    }
 
     return (
         <div className='Info'>
@@ -412,6 +418,7 @@ function Main_profile() {
                                                                             <li><p>Использованный кэшбэк:</p> <p>{order?.cashback_used} сум</p></li>
                                                                             <li><p>Сумма c вычетом кэшбэк:</p> <p>{order?.amount} сум</p></li>
                                                                             <li><p>Общая сумма:</p> <p>{order?.total_amount}  сум</p></li>
+                                                                            <li className='bill-li'><p>Чек:</p> <a href={order?.online_payments?.qr_code_url} className='downloadBill' download>Download</a></li>
                                                                         </ul>
                                                                         <ul className='Info-products-inner-ul'>
                                                                             <h3>Название продукты:</h3>
@@ -427,7 +434,7 @@ function Main_profile() {
                                                                             }
                                                                         </ul>
                                                                     </div>
-                                                                </td>
+                                                                </td >
                                                             </tr>
                                                         </>
                                                     ))}
