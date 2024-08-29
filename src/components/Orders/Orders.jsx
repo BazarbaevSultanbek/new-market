@@ -202,7 +202,7 @@ function Orders({ setPage }) {
                                                         marginTop: '10px'
                                                     }}>
                                                     <p>Чек:</p>
-                                                    <a href={order?.online_payments?.qr_code_url} className='downloadBill' download>Download</a>
+                                                    <a href={order?.online_payments[0]?.qr_code_url} className='downloadBill' download>Download</a>
                                                 </div>
                                             </div>
                                         </div>
